@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: teamate
+      POSTGRES_PASSWORD: teamate
+      POSTGRES_DB: teamate
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teamate"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./apps/api
+    environment:
+      DATABASE_URL: postgresql+asyncpg://teamate:teamate@db:5432/teamate
+      JWT_SECRET: compose-dev-secret
+      MEDIA_DIR: /app/media
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,capacitor://localhost,http://localhost
+    volumes:
+      - ./apps/api/app:/app/app
+      - media:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  web:
+    build: ./apps/web
+    environment:
+      VITE_DEV_API: http://api:8000
+    volumes:
+      - ./apps/web/src:/app/src
+      - ./apps/web/index.html:/app/index.html
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  media:
