@@ -20,7 +20,7 @@ describe('reveal', () => {
   })
 
   it('falls back to the hero portrait when there is no photo', () => {
-    render(<RevealPhoto photoUrl={null} stage={3} avatar="builder" accent="#F5C518" />)
-    expect(screen.getByRole('img', { name: 'Builder portrait' })).toHaveAttribute('src', '/avatars/builder.jpg')
+    const { container } = render(<RevealPhoto photoUrl={null} stage={3} avatar="builder" accent="#F5C518" />)
+    expect(container.querySelector('svg[aria-label="Builder mask"]')).toBeInTheDocument()
   })
 })

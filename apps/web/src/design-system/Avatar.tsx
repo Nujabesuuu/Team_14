@@ -1,4 +1,4 @@
-import { AVATAR_META, avatarSrc } from '@/avatars'
+import { AVATAR_META, avatarSrc, hasPortrait, MASKS } from '@/avatars'
 import type { AvatarKey } from '@/api/types'
 
 interface Props {
@@ -7,12 +7,14 @@ interface Props {
   size?: number
   /** Paper ring + hard accent shadow: the Phantom UI sticker look. */
   framed?: boolean
-  /** Override the portrait (e.g. the demo guide). */
-  src?: string
 }
 
-/** Hero portrait in a round sticker: paper border, hard accent offset shadow. */
-export function Avatar({ avatar, accent, size = 48, framed = true, src }: Props) {
+/**
+ * Hero avatar in a round sticker: paper border, hard accent offset shadow.
+ * Uses the generated portrait when the archetype has one, otherwise its SVG mask.
+ */
+export function Avatar({ avatar, accent, size = 48, framed = true }: Props) {
+  const Mask = MASKS[avatar] ?? MASKS.duelist
   const meta = AVATAR_META[avatar] ?? AVATAR_META.duelist
   const ring = size >= 96 ? 4 : 3
   return (
@@ -26,18 +28,24 @@ export function Avatar({ avatar, accent, size = 48, framed = true, src }: Props)
         background: 'var(--ink)',
         border: framed ? `${ring}px solid var(--paper)` : undefined,
         boxShadow: framed ? `${ring + 1}px ${ring + 1}px 0 ${accent}` : undefined,
+        display: 'grid',
+        placeItems: 'center',
         overflow: 'hidden',
         flexShrink: 0,
       }}
     >
-      <img
-        src={src ?? avatarSrc(avatar)}
-        alt={`${meta.name} portrait`}
-        width={size}
-        height={size}
-        loading="lazy"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%', display: 'block' }}
-      />
+      {hasPortrait(avatar) ? (
+        <img
+          src={avatarSrc(avatar)}
+          alt={`${meta.name} portrait`}
+          width={size}
+          height={size}
+          loading="lazy"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 18%', display: 'block' }}
+        />
+      ) : (
+        <Mask accent={accent} size={size * 0.78} />
+      )}
     </div>
   )
 }

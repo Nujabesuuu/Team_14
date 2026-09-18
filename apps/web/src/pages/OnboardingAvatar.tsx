@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import type { AvatarKey } from '@/api/types'
-import { AVATAR_KEYS, AVATAR_META, avatarSrc } from '@/avatars'
+import { AVATAR_KEYS, AVATAR_META, avatarSrc, hasPortrait, MASKS } from '@/avatars'
 import { PhantomButton } from '@/design-system/PhantomButton'
 import { accentPalette } from '@/design-system/tokens'
 import { OnboardingFrame, Question } from '@/features/onboarding/OnboardingFrame'
@@ -16,6 +16,7 @@ export function OnboardingAvatar() {
   const [avatar, setAvatar] = useState<AvatarKey>(me?.profile.avatar_key ?? 'duelist')
   const [accent, setAccent] = useState(me?.profile.accent_color ?? accentPalette[0])
   const [busy, setBusy] = useState(false)
+  const HeroMask = MASKS[avatar]
 
   const pick = (key: AvatarKey) => {
     setAvatar(key)
@@ -53,12 +54,26 @@ export function OnboardingAvatar() {
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
           style={{ position: 'relative', clipPath: 'var(--cut-card)', background: 'var(--paper)', padding: 8 }}
         >
-          <div style={{ position: 'relative', clipPath: 'var(--cut-card)', overflow: 'hidden', aspectRatio: '4 / 3', background: 'var(--ink)' }}>
-            <img
-              src={avatarSrc(avatar)}
-              alt={`${AVATAR_META[avatar].name} portrait`}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 12%', display: 'block' }}
-            />
+          <div
+            style={{
+              position: 'relative',
+              clipPath: 'var(--cut-card)',
+              overflow: 'hidden',
+              aspectRatio: '4 / 3',
+              background: hasPortrait(avatar) ? 'var(--blood)' : 'var(--ink)',
+              display: 'grid',
+              placeItems: 'center',
+            }}
+          >
+            {hasPortrait(avatar) ? (
+              <img
+                src={avatarSrc(avatar)}
+                alt={`${AVATAR_META[avatar].name} portrait`}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 12%', display: 'block' }}
+              />
+            ) : (
+              <HeroMask accent={accent} size={180} />
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '10px 8px 4px', color: 'var(--ink)' }}>
             <span className="display skew" style={{ fontSize: 36 }}>
@@ -92,11 +107,17 @@ export function OnboardingAvatar() {
                   transition: 'opacity var(--dur-fast)',
                 }}
               >
-                <img
-                  src={avatarSrc(key)}
-                  alt=""
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 15%', display: 'block', clipPath: 'var(--cut-chip)' }}
-                />
+                {hasPortrait(key) ? (
+                  <img
+                    src={avatarSrc(key)}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 15%', display: 'block', clipPath: 'var(--cut-chip)' }}
+                  />
+                ) : (
+                  <span style={{ display: 'grid', placeItems: 'center', width: '100%', height: '100%', background: 'var(--ink-2)', clipPath: 'var(--cut-chip)' }}>
+                    <GridMask k={key} accent={active ? AVATAR_META[key].accent : '#F4F1EA'} />
+                  </span>
+                )}
               </button>
             )
           })}
@@ -126,4 +147,9 @@ export function OnboardingAvatar() {
       </Question>
     </OnboardingFrame>
   )
+}
+
+function GridMask({ k, accent }: { k: AvatarKey; accent: string }) {
+  const Mask = MASKS[k]
+  return <Mask accent={accent} size={54} />
 }

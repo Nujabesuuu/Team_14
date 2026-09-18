@@ -1,16 +1,18 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 
-import { avatarSrc } from '@/avatars'
+import { avatarSrc, hasPortrait, MASKS } from '@/avatars'
 import { PhantomButton } from '@/design-system/PhantomButton'
 
 const stagger = { hidden: { opacity: 0, x: -40 }, show: { opacity: 1, x: 0 } }
+const HERO = 'duelist' as const
 
 export function Welcome() {
   const navigate = useNavigate()
+  const HeroMask = MASKS[HERO]
   return (
     <div className="screen" style={{ overflow: 'hidden' }}>
-      {/* Red diagonal slab, then the hero portrait as a tilted paper sticker on top of it. */}
+      {/* Red diagonal slab, then the hero as a tilted paper sticker on top of it. */}
       <motion.div
         aria-hidden
         initial={{ x: 120, opacity: 0 }}
@@ -36,24 +38,34 @@ export function Welcome() {
           top: 54,
           right: 18,
           width: 236,
-          height: 300,
+          height: 290,
           clipPath: 'var(--cut-card)',
           background: 'var(--paper)',
           padding: 8,
         }}
       >
-        <div style={{ width: '100%', height: '100%', clipPath: 'var(--cut-card)', overflow: 'hidden', background: 'var(--ink)' }}>
-          <img
-            src={avatarSrc('duelist')}
-            alt=""
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '55% 10%', display: 'block', filter: 'contrast(1.08) saturate(1.05)' }}
-          />
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            clipPath: 'var(--cut-card)',
+            overflow: 'hidden',
+            background: hasPortrait(HERO) ? 'var(--blood)' : 'var(--ink)',
+            display: 'grid',
+            placeItems: 'center',
+          }}
+        >
+          {hasPortrait(HERO) ? (
+            <img src={avatarSrc(HERO)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 10%', display: 'block' }} />
+          ) : (
+            <HeroMask accent="var(--blood)" size={170} />
+          )}
         </div>
         <div
           className="cond"
           style={{
             position: 'absolute',
-            left: -10,
+            left: 6,
             bottom: 22,
             padding: '5px 12px',
             background: 'var(--ink)',
@@ -79,16 +91,14 @@ export function Welcome() {
         <motion.h1
           variants={stagger}
           className="display skew"
-          style={{ fontSize: 88, margin: '4px 0 0', color: 'var(--paper)', lineHeight: 0.86 }}
+          style={{ fontSize: 74, margin: '6px 0 0', color: 'var(--paper)', lineHeight: 0.9, textShadow: '5px 5px 0 var(--blood)' }}
         >
-          Team
-          <br />
-          <span style={{ color: 'var(--blood)', textShadow: '4px 4px 0 var(--paper)' }}>ate</span>
+          Teamate
         </motion.h1>
-        <motion.p variants={stagger} style={{ fontSize: 16, maxWidth: 300, marginTop: 18, color: 'var(--muted)' }}>
+        <motion.p variants={stagger} style={{ fontSize: 16, maxWidth: 300, marginTop: 16, color: 'var(--muted)' }}>
           Find a teammate. Play a round. If it clicks, get closer. Photos stay blurred until you both say so.
         </motion.p>
-        <motion.div variants={stagger} style={{ display: 'grid', gap: 14, marginTop: 28 }}>
+        <motion.div variants={stagger} style={{ display: 'grid', gap: 14, marginTop: 26 }}>
           <PhantomButton size="lg" block onClick={() => navigate('/register')}>
             Create profile
           </PhantomButton>
