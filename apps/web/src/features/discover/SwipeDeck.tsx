@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-mo
 import { useState } from 'react'
 
 import type { DiscoverCard, SwipeDirection } from '@/api/types'
+import { avatarSrc } from '@/avatars'
 import { Chip } from '@/design-system/Chip'
 import { Stamp } from '@/design-system/Stamp'
 import { RevealPhoto } from '@/features/matches/RevealPhoto'
@@ -87,8 +88,19 @@ export function CardFace({ card, stage }: { card: DiscoverCard; stage: number })
           overflow: 'hidden',
         }}
       >
-        <div style={{ position: 'relative', height: '46%', background: 'var(--ink)', display: 'grid', placeItems: 'center' }}>
-          <RevealPhoto photoUrl={u.photo_url} stage={stage} avatar={u.avatar_key} accent={u.accent_color} size={170} />
+        <div style={{ position: 'relative', height: '50%', background: 'var(--ink)', overflow: 'hidden' }}>
+          {/* Hero portrait full-bleed; the blurred real photo sits on it as a sticker when they have one. */}
+          <img
+            src={avatarSrc(u.avatar_key)}
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 12%', display: 'block' }}
+          />
+          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 55%, rgba(10,10,10,0.75))' }} />
+          {u.photo_url && (
+            <div style={{ position: 'absolute', left: 14, bottom: 12, transform: 'rotate(-4deg)' }}>
+              <RevealPhoto photoUrl={u.photo_url} stage={stage} avatar={u.avatar_key} accent={u.accent_color} size={88} />
+            </div>
+          )}
           <div
             className="display"
             style={{

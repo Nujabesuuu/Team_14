@@ -2,10 +2,13 @@
 
 import asyncio
 import random
+import shutil
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 
 from sqlalchemy import select
 
+from app.core.config import get_settings
 from app.core.db import SessionLocal, create_all
 from app.core.security import hash_password
 from app.models import (
@@ -21,9 +24,24 @@ from app.models import (
     ProfileGame,
     User,
 )
+from app.services.bot import GUIDE_EMAIL, ensure_guide_match
 from app.services.matches import create_match
 
 PASSWORD = "demo1234"
+SEED_ASSETS = Path(__file__).resolve().parent / "seed_assets"
+
+
+def _install_photo(name: str) -> str | None:
+    """Copy a generated seed photo into MEDIA_DIR and return its public URL, or None if absent."""
+    src = SEED_ASSETS / f"{name}.jpg"
+    if not src.exists():
+        return None
+    media = Path(get_settings().media_dir)
+    media.mkdir(parents=True, exist_ok=True)
+    dst = media / f"seed-{name}.jpg"
+    shutil.copyfile(src, dst)
+    return f"/media/{dst.name}"
+
 
 GAMES = [
     ("Valorant", "valorant", False, "#FF4655"),
@@ -45,7 +63,7 @@ USERS = [
     (
         "Nika",
         2001,
-        "kitsune",
+        "duelist",
         "#E60012",
         ["duo", "dating"],
         "support",
@@ -59,7 +77,7 @@ USERS = [
     (
         "Danylo",
         1999,
-        "raven",
+        "operator",
         "#1E90FF",
         ["duo", "friends", "dating"],
         "carry",
@@ -73,7 +91,7 @@ USERS = [
     (
         "Olesia",
         2002,
-        "vesper",
+        "sage",
         "#9B59B6",
         ["friends", "dating"],
         "flex",
@@ -87,7 +105,7 @@ USERS = [
     (
         "Taras",
         1998,
-        "sentinel",
+        "vanguard",
         "#2ECC71",
         ["duo"],
         "tank",
@@ -101,7 +119,7 @@ USERS = [
     (
         "Marta",
         2000,
-        "oracle",
+        "builder",
         "#F5C518",
         ["friends", "dating"],
         "igl",
@@ -115,7 +133,7 @@ USERS = [
     (
         "Yehor",
         2003,
-        "jester",
+        "impostor",
         "#FF6B35",
         ["duo", "friends"],
         "flex",
@@ -129,7 +147,7 @@ USERS = [
     (
         "Sofia",
         2001,
-        "marionette",
+        "strategist",
         "#E91E63",
         ["dating"],
         "support",
@@ -143,7 +161,7 @@ USERS = [
     (
         "Bohdan",
         1997,
-        "nomad",
+        "pilot",
         "#00BCD4",
         ["duo", "dating"],
         "carry",
@@ -157,7 +175,7 @@ USERS = [
     (
         "Ira",
         2002,
-        "kitsune",
+        "duelist",
         "#8BC34A",
         ["friends"],
         "flex",
@@ -171,7 +189,7 @@ USERS = [
     (
         "Maks",
         2000,
-        "raven",
+        "operator",
         "#607D8B",
         ["duo", "friends"],
         "igl",
@@ -185,7 +203,7 @@ USERS = [
     (
         "Zlata",
         2001,
-        "vesper",
+        "sage",
         "#FF9800",
         ["dating", "friends"],
         "support",
@@ -199,7 +217,7 @@ USERS = [
     (
         "Roman",
         1999,
-        "sentinel",
+        "vanguard",
         "#3F51B5",
         ["duo", "dating"],
         "tank",
@@ -243,6 +261,7 @@ async def seed() -> None:
                 bio=bio,
                 avatar_key=AvatarKey(avatar),
                 accent_color=accent,
+                photo_url=_install_photo(f"user{i:02d}"),
                 modes=modes,
                 role=role,
                 playstyle=style,
@@ -253,6 +272,28 @@ async def seed() -> None:
             )
             s.add(u)
             users.append(u)
+
+        guide = User(
+            email=GUIDE_EMAIL,
+            password_hash=pw,
+            display_name="Guide",
+            birth_date=date(2000, 1, 1),
+            is_bot=True,
+        )
+        guide.profile = Profile(
+            bio="Demo companion. I answer in chat and agree to reveal, so you can try the flow alone.",
+            avatar_key=AvatarKey.sage,
+            accent_color="#F5C518",
+            photo_url=_install_photo("guide"),
+            modes=["duo", "friends", "dating"],
+            role="support",
+            playstyle="casual",
+            comms="text",
+            schedule=["evening", "night", "weekend"],
+            toxicity_tolerance=3,
+            games=[ProfileGame(game_id=games[slug].id) for slug in ("valorant", "among-us", "overcooked-2")],
+        )
+        s.add(guide)
         await s.flush()
 
         now = datetime.now(UTC)
@@ -328,7 +369,14 @@ async def seed() -> None:
             ]
         )
         await s.commit()
-        print(f"Seeded {len(USERS)} users (password: {PASSWORD}), {len(GAMES)} games, {len(open_events) + 2} events.")
+
+        # Every seed user gets the guide as a first match, so chat and reveal are testable solo.
+        for u in users:
+            await ensure_guide_match(s, u)
+        print(
+            f"Seeded {len(USERS)} users + guide (password: {PASSWORD}), {len(GAMES)} games, "
+            f"{len(open_events) + 2} events."
+        )
 
 
 if __name__ == "__main__":

@@ -70,10 +70,10 @@ export function Profile() {
           </div>
           <div style={{ display: 'grid', gap: 8, flex: 1 }}>
             <PhantomButton size="sm" variant="paper" onClick={() => fileRef.current?.click()} disabled={busy}>
-              {busy ? 'Uploading…' : photo ? 'Change photo' : 'Add photo'}
+              {busy ? 'Uploading' : photo ? 'Change photo' : 'Add photo'}
             </PhantomButton>
             <PhantomButton size="sm" variant="ghost" onClick={() => navigate('/onboarding/avatar')}>
-              Change mask
+              Change hero
             </PhantomButton>
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => onPhoto(e.target.files?.[0])} />
           </div>

@@ -14,13 +14,13 @@ describe('reveal', () => {
     [1, 'blur(12px) grayscale(0)'],
     [3, 'blur(0px) grayscale(0)'],
   ])('stage %i renders the photo with filter %s', (stage, filter) => {
-    render(<RevealPhoto photoUrl="/media/x.jpg" stage={stage} avatar="raven" accent="#E60012" />)
+    render(<RevealPhoto photoUrl="/media/x.jpg" stage={stage} avatar="operator" accent="#E60012" />)
     const img = screen.getByTestId('reveal-photo').querySelector('img')!
     expect(img.style.filter).toBe(filter)
   })
 
-  it('falls back to the mask when there is no photo', () => {
-    const { container } = render(<RevealPhoto photoUrl={null} stage={3} avatar="oracle" accent="#F5C518" />)
-    expect(container.querySelector('svg[aria-label="Oracle mask"]')).toBeInTheDocument()
+  it('falls back to the hero portrait when there is no photo', () => {
+    render(<RevealPhoto photoUrl={null} stage={3} avatar="builder" accent="#F5C518" />)
+    expect(screen.getByRole('img', { name: 'Builder portrait' })).toHaveAttribute('src', '/avatars/builder.jpg')
   })
 })

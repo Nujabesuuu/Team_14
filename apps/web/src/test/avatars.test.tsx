@@ -1,19 +1,21 @@
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 
-import { AVATAR_KEYS, AVATAR_META, AVATARS } from '@/avatars'
+import { AVATAR_KEYS, AVATAR_META, avatarSrc } from '@/avatars'
+import { Avatar } from '@/design-system/Avatar'
 
 describe('avatar set', () => {
-  it('has exactly eight original masks with metadata', () => {
+  it('has exactly eight archetypes with metadata', () => {
     expect(AVATAR_KEYS).toHaveLength(8)
-    for (const key of AVATAR_KEYS) expect(AVATAR_META[key].name).toBeTruthy()
+    for (const key of AVATAR_KEYS) {
+      expect(AVATAR_META[key].name).toBeTruthy()
+      expect(avatarSrc(key)).toBe(`/avatars/${key}.jpg`)
+    }
   })
 
-  it.each(AVATAR_KEYS)('%s renders an accessible svg using the accent', (key) => {
-    const Mask = AVATARS[key]
-    const { container } = render(<Mask accent="#123456" size={40} />)
-    const svg = container.querySelector('svg')
-    expect(svg).toHaveAttribute('role', 'img')
-    expect(svg?.getAttribute('width')).toBe('40')
-    expect(container.innerHTML).toContain('#123456')
+  it('renders the portrait with an accessible name and the accent ring', () => {
+    render(<Avatar avatar="sage" accent="#3AA46B" size={40} />)
+    const img = screen.getByRole('img', { name: 'Sage portrait' })
+    expect(img).toHaveAttribute('src', '/avatars/sage.jpg')
+    expect(screen.getByTestId('avatar').style.boxShadow).toContain('#3AA46B')
   })
 })

@@ -32,13 +32,13 @@ docker compose up --build
 docker compose exec api python -m app.seed
 ```
 
-Демо-акаунти: `user01@teamate.dev` … `user12@teamate.dev`, пароль `demo1234`. Відкрийте дві вкладки (токен живе в `sessionStorage`, тому це два незалежні акаунти) і пройдіть [сценарій демо](docs/demo.md). OpenAPI: http://localhost:8000/docs.
+Демо-акаунти: `user01@teamate.dev` … `user12@teamate.dev`, пароль `demo1234`. Чат і reveal можна перевірити самому: бот **Guide** автоматично метчиться з кожним акаунтом, відповідає й погоджується на reveal. Для повного циклу з івентом відкрийте дві вкладки (токен живе в `sessionStorage`, тому це два незалежні акаунти) і пройдіть [сценарій демо](docs/demo.md). OpenAPI: http://localhost:8000/docs.
 
 **Тести:**
 
 ```bash
-cd apps/api && .venv/bin/ruff check app tests && .venv/bin/pytest -q     # 66 тестів
-cd apps/web && npm run typecheck && npm run lint && npm test              # 25 тестів
+cd apps/api && .venv/bin/ruff check app tests && .venv/bin/pytest -q     # 69 тестів
+cd apps/web && npm run typecheck && npm run lint && npm test              # 18 тестів
 ```
 
 **Android:** див. [docs/android.md](docs/android.md) (`npx cap add android && npm run cap:sync`).
@@ -60,7 +60,7 @@ docker-compose.yml · .github/workflows/ci.yml
 | [architecture.md](docs/architecture.md) | Шари, діаграми, потік подій, обмеження MVP |
 | [data-model.md](docs/data-model.md) | ER-діаграма, ключові рішення по схемі, enum-и |
 | [api.md](docs/api.md) | Усі ендпоінти, коди помилок, протокол WebSocket |
-| [design-system.md](docs/design-system.md) | Токени, форми, рух, маски |
+| [design-system.md](docs/design-system.md) | Токени, форми, рух, портрети героїв |
 | [demo.md](docs/demo.md) | Покроковий сценарій показу на двох пристроях |
 | [android.md](docs/android.md) | Збірка APK через Capacitor |
 | [ai-log.md](docs/ai-log.md) | Журнал використання ШІ: що прийнято, що відкинуто, які дефекти знайдено |

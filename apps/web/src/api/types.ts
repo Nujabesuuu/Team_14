@@ -1,14 +1,14 @@
 /** Mirrors apps/api/app/schemas. Keep in sync when the API changes. */
 
 export type AvatarKey =
-  | 'raven'
-  | 'jester'
-  | 'kitsune'
-  | 'marionette'
-  | 'sentinel'
-  | 'vesper'
-  | 'nomad'
-  | 'oracle'
+  | 'operator'
+  | 'impostor'
+  | 'duelist'
+  | 'strategist'
+  | 'vanguard'
+  | 'sage'
+  | 'pilot'
+  | 'builder'
 
 export type Mode = 'duo' | 'friends' | 'dating'
 export type Role = 'support' | 'carry' | 'flex' | 'tank' | 'igl'

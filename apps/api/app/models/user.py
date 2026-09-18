@@ -15,6 +15,8 @@ class User(UuidPk, Timestamped, Base):
     display_name: Mapped[str] = mapped_column(String(40), nullable=False)
     birth_date: Mapped[date] = mapped_column(Date, nullable=False)
     is_premium: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Scripted demo companion (Teamate Guide): auto-matches, replies in chat, agrees to reveal.
+    is_bot: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     profile: Mapped["Profile"] = relationship(  # noqa: F821
         back_populates="user", uselist=False, cascade="all, delete-orphan", lazy="selectin"

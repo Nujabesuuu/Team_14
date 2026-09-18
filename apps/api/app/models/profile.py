@@ -12,7 +12,7 @@ class Profile(Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     bio: Mapped[str] = mapped_column(Text, default="", nullable=False)
-    avatar_key: Mapped[AvatarKey] = mapped_column(Enum(AvatarKey), default=AvatarKey.raven, nullable=False)
+    avatar_key: Mapped[AvatarKey] = mapped_column(Enum(AvatarKey), default=AvatarKey.operator, nullable=False)
     accent_color: Mapped[str] = mapped_column(String(7), default="#E60012", nullable=False)
     photo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     # Game DNA

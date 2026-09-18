@@ -48,4 +48,7 @@ async def send_message(session: AsyncSession, conv: Conversation, sender_id: uui
         (conv.match.user_a_id, conv.match.user_b_id),
         {"type": "message.new", "message": out.model_dump(mode="json")},
     )
+    from app.services.bot import schedule_reply
+
+    await schedule_reply(conv, sender_id, body)
     return out

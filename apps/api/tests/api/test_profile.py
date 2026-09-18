@@ -17,14 +17,14 @@ async def test_update_dna_and_games(client, make_user):
             "schedule": ["evening"],
             "toxicity_tolerance": 2,
             "modes": ["duo", "friends"],
-            "avatar_key": "kitsune",
+            "avatar_key": "duelist",
             "accent_color": "#1E90FF",
             "games": [{"game_id": str(games["valorant"].id), "rank": "Gold"}],
         },
     )
     assert r.status_code == 200, r.text
     p = r.json()["profile"]
-    assert p["role"] == "support" and p["avatar_key"] == "kitsune"
+    assert p["role"] == "support" and p["avatar_key"] == "duelist"
     assert p["games"][0]["slug"] == "valorant" and p["games"][0]["rank"] == "Gold"
     assert p["onboarded"] is True
 

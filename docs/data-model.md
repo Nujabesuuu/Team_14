@@ -26,6 +26,7 @@ erDiagram
     string display_name
     date birth_date
     bool is_premium
+    bool is_bot
   }
   profiles {
     uuid user_id PK
@@ -97,6 +98,7 @@ erDiagram
 - **`photo_reveals` — по одному рядку на кожного учасника метчу.** `stage` описує, наскільки чітко *мій* профіль показаний співрозмовнику. Кожен користувач контролює тільки своє фото ([ADR-0003](adr/0003-per-user-reveal.md)).
 - **`post_game_feedback` унікальний по (event, from, to)** — оцінити тіммейта можна один раз; відповідь приватна, поки не стане взаємним *closer*.
 - **`profiles.modes` та `schedule` — JSON-масиви**, а не окремі таблиці: це невеликі списки enum-значень, які читаються завжди цілком.
+- **`users.is_bot`** позначає демо-компаньйона Guide: бекенд автоматично метчить його з кожним онбордженим користувачем, відповідає в чаті й погоджується на reveal (`services/bot.py`).
 - **`blocks` симетричний у логіці:** `blocked_ids(user)` повертає і тих, кого заблокував користувач, і тих, хто заблокував його.
 
 ## Enum-и
@@ -112,4 +114,4 @@ erDiagram
 | `Role` | `support`, `carry`, `flex`, `tank`, `igl` |
 | `Playstyle` | `casual`, `competitive` |
 | `Comms` | `voice`, `text`, `both` |
-| `AvatarKey` | `raven`, `jester`, `kitsune`, `marionette`, `sentinel`, `vesper`, `nomad`, `oracle` |
+| `AvatarKey` | `duelist`, `sage`, `impostor`, `builder`, `pilot`, `operator`, `vanguard`, `strategist` |

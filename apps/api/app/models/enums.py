@@ -56,11 +56,11 @@ class Comms(StrEnum):
 
 
 class AvatarKey(StrEnum):
-    raven = "raven"
-    jester = "jester"
-    kitsune = "kitsune"
-    marionette = "marionette"
-    sentinel = "sentinel"
-    vesper = "vesper"
-    nomad = "nomad"
-    oracle = "oracle"
+    operator = "operator"
+    impostor = "impostor"
+    duelist = "duelist"
+    strategist = "strategist"
+    vanguard = "vanguard"
+    sage = "sage"
+    pilot = "pilot"
+    builder = "builder"

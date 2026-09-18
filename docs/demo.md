@@ -8,12 +8,21 @@
 cd apps/api && .venv/bin/python -m app.seed   # 12 користувачів, 12 ігор, 8 івентів
 ```
 
-Акаунти: `user01@teamate.dev` … `user12@teamate.dev`, пароль `demo1234`. `user02` (Danylo) — преміум.
+Акаунти: `user01@teamate.dev` … `user12@teamate.dev`, пароль `demo1234`. `user02` (Danylo) — преміум. У seed-профілів є згенеровані фото, тож блюр reveal видно одразу.
+
+## Демо без другого акаунта: Teamate Guide
+
+Кожен користувач після онбордингу автоматично отримує метч із **Guide** (бот, `guide@teamate.dev`, `is_bot=true`). Він:
+- надсилає два вітальні повідомлення;
+- відповідає на будь-яке повідомлення через ~1 с (правила за ключовими словами: гра, reveal, «коли», питання; інакше фолбек);
+- погоджується на reveal через ~1 с після вашого «Reveal photos», тож стадія стає 3/3.
+
+Уся логіка в `apps/api/app/services/bot.py`; бот проходить через ті самі сервіси, що й людина, клієнт про нього не знає.
 
 | Вкладка | Хто | Роль у демо |
 |---|---|---|
-| A | `user01` Nika (kitsune) | Host івенту |
-| B | `user02` Danylo (raven, Teamate+) | Гість |
+| A | `user01` Nika (duelist) | Host івенту |
+| B | `user02` Danylo (operator, Teamate+) | Гість |
 
 ## Кроки
 
@@ -22,7 +31,7 @@ cd apps/api && .venv/bin/python -m app.seed   # 12 користувачів, 12 
 3. **A → Start the game → We're done — finish.** A автоматично потрапляє на «Play again?». На екрані B кнопка Leave змінилась на «Play again?» без перезавантаження.
 4. **A → Get closer.** Відповідь приватна: B нічого не бачить. Екран A: «All rated».
 5. **B → Play again? → Get closer.** Обидва екрани одночасно перемикаються на червоний **IT'S A MATCH** (A — через `match.new`).
-6. **B → Say something → написати повідомлення.** З'являється на A миттєво. Показати бульбашки-паралелограми, маску співрозмовника, `41% DNA`.
+6. **B → Say something → написати повідомлення.** З'являється на A миттєво. Показати бульбашки-паралелограми, портрет співрозмовника, `41% DNA`.
 7. **A → тап по аватару в шапці чату → Reveal photos.** На B з'являється «Nika wants to reveal. Your call.» і (бо B преміум) «Ask to reveal now».
 8. **B → Reveal photos.** Обидва бачать `REVEAL 3/3 · REVEALED`. Якщо у профілів є фото — блюр анімовано зникає.
 

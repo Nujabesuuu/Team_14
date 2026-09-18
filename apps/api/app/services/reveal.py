@@ -22,6 +22,9 @@ async def consent(session: AsyncSession, match: Match, user: User) -> Match:
         mine.stage = theirs.stage = rules.CLEAR
     await session.commit()
     await _push(session, match)
+    from app.services.bot import schedule_consent
+
+    await schedule_consent(match, user.id)
     return match
 
 

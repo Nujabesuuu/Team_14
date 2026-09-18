@@ -52,6 +52,7 @@ def dna_of(profile: Profile) -> GameDna:
 
 async def update_profile(session: AsyncSession, user: User, data: ProfileUpdate) -> User:
     profile = user.profile
+    profile_was_onboarded = profile.onboarded
     patch = data.model_dump(exclude_unset=True)
 
     if "display_name" in patch:
@@ -75,8 +76,15 @@ async def update_profile(session: AsyncSession, user: User, data: ProfileUpdate)
     for key, value in patch.items():
         setattr(profile, key, value)
 
+    was_onboarded = profile_was_onboarded
     await session.commit()
     await session.refresh(user)
+
+    if user.profile.onboarded and not was_onboarded:
+        # First time the profile is complete: pair with the demo guide so chat works right away.
+        from app.services.bot import ensure_guide_match
+
+        await ensure_guide_match(session, user)
     return user
 
 
