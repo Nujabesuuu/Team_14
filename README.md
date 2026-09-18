@@ -2,7 +2,70 @@
 
 > Мобільний застосунок для знайомств між геймерами. Люди знайомляться не через фото, а через спільну гру: спочатку грають разом, а симпатія виникає під час гри.
 
-**Статус:** контрольна точка 1. Команда та стартова ідея (робоча гіпотеза, буде уточнюватись протягом курсу).
+**Статус:** MVP реалізовано — працює наскрізний сценарій *івент → гра → «Зіграємо ще?» → метч → чат → розкриття фото*, свайпи, режими, Game Date, Teamate+. Розділи 1–4 нижче — артефакт контрольної точки 1; технічна документація — у [`docs/`](docs/).
+
+---
+
+## Швидкий старт
+
+**Варіант A — без Docker (SQLite):**
+
+```bash
+# API (Python 3.12+)
+cd apps/api
+python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+.venv/bin/python -m app.seed                      # 12 демо-акаунтів, ігри, івенти
+.venv/bin/uvicorn app.main:app --reload --port 8000
+```
+
+```bash
+# Web (Node 22) — в іншому терміналі
+cd apps/web
+npm install
+npm run dev                                       # http://localhost:5173
+```
+
+**Варіант B — Docker Compose (PostgreSQL):**
+
+```bash
+docker compose up --build
+docker compose exec api python -m app.seed
+```
+
+Демо-акаунти: `user01@teamate.dev` … `user12@teamate.dev`, пароль `demo1234`. Відкрийте дві вкладки (токен живе в `sessionStorage`, тому це два незалежні акаунти) і пройдіть [сценарій демо](docs/demo.md). OpenAPI: http://localhost:8000/docs.
+
+**Тести:**
+
+```bash
+cd apps/api && .venv/bin/ruff check app tests && .venv/bin/pytest -q     # 66 тестів
+cd apps/web && npm run typecheck && npm run lint && npm test              # 25 тестів
+```
+
+**Android:** див. [docs/android.md](docs/android.md) (`npx cap add android && npm run cap:sync`).
+
+## Структура репозиторію
+
+```
+apps/api/        FastAPI: app/domain (чисті правила) · services · routers · ws · seed.py · tests/
+apps/web/        React 18 + TS + Vite: design-system (Phantom UI) · avatars · pages · features · stores · api
+docs/            architecture · data-model · api · design-system · demo · android · ai-log · adr/
+docs/superpowers/  spec і план реалізації MVP
+docker-compose.yml · .github/workflows/ci.yml
+```
+
+## Документація
+
+| Документ | Що всередині |
+|---|---|
+| [architecture.md](docs/architecture.md) | Шари, діаграми, потік подій, обмеження MVP |
+| [data-model.md](docs/data-model.md) | ER-діаграма, ключові рішення по схемі, enum-и |
+| [api.md](docs/api.md) | Усі ендпоінти, коди помилок, протокол WebSocket |
+| [design-system.md](docs/design-system.md) | Токени, форми, рух, маски |
+| [demo.md](docs/demo.md) | Покроковий сценарій показу на двох пристроях |
+| [android.md](docs/android.md) | Збірка APK через Capacitor |
+| [ai-log.md](docs/ai-log.md) | Журнал використання ШІ: що прийнято, що відкинуто, які дефекти знайдено |
+| [adr/](docs/adr/) | Архітектурні рішення: FastAPI, Capacitor, reveal-модель, WS-хаб |
+| [spec](docs/superpowers/specs/2026-09-18-teamate-mvp-design.md) · [plan](docs/superpowers/plans/2026-09-19-teamate-mvp.md) | Специфікація та план, за якими будувався MVP |
 
 ---
 
