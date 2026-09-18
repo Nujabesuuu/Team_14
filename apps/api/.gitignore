@@ -1,0 +1,9 @@
+.venv/
+media/
+*.db
+*.db-journal
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.env
