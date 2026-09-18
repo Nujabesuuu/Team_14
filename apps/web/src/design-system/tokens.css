@@ -1,0 +1,37 @@
+/* Phantom UI — design tokens. The single source of truth for color, type and shape. */
+:root {
+  --ink: #0a0a0a;
+  --ink-2: #141414;
+  --paper: #f4f1ea;
+  --paper-2: #e6e1d6;
+  --blood: #e60012;
+  --blood-deep: #9b000c;
+  --ash: #2a2a2a;
+  --ash-2: #3d3d3d;
+  --chalk: #ffffff;
+  --gold: #f5c518;
+  --muted: rgba(244, 241, 234, 0.55);
+
+  --font-display: 'Anton', Impact, 'Arial Narrow Bold', sans-serif;
+  --font-ui: 'Barlow', system-ui, sans-serif;
+  --font-cond: 'Barlow Condensed', 'Barlow', sans-serif;
+
+  --skew: -8deg;
+  --phone-w: 430px;
+  --tab-h: 68px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Signature polygon shapes (clip-path). */
+  --cut-card: polygon(0 4%, 97% 0, 100% 94%, 3% 100%);
+  --cut-card-alt: polygon(2% 0, 100% 3%, 98% 100%, 0 96%);
+  --cut-button: polygon(3% 0, 100% 0, 97% 100%, 0 100%);
+  --cut-chip: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
+  --cut-tag: polygon(0 0, 100% 0, 92% 100%, 0 100%);
+  --cut-bubble-them: polygon(0 12%, 4% 0, 100% 3%, 97% 100%, 6% 97%);
+  --cut-bubble-me: polygon(0 3%, 96% 0, 100% 12%, 94% 97%, 3% 100%);
+
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.1, 1);
+  --dur-fast: 160ms;
+  --dur-wipe: 260ms;
+}

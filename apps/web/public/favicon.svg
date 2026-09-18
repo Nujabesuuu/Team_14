@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <polygon points="4,8 60,2 56,58 8,62" fill="#0A0A0A"/>
+  <polygon points="12,14 52,10 48,50 16,54" fill="#E60012"/>
+  <text x="32" y="44" font-family="Impact, Anton, sans-serif" font-size="34" fill="#F4F1EA" text-anchor="middle" transform="skewX(-8)">T</text>
+</svg>
