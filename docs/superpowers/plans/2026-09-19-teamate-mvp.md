@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Code, identifiers, comments, commit messages: **English**. Docs in `docs/`: Ukrainian.
-- No AI attribution in commits (no `Co-authored-by`, no "Claude").
+- Commits are authored by team members only (no `Co-authored-by` trailers).
 - Palette tokens: `--ink #0A0A0A`, `--paper #F4F1EA`, `--blood #E60012`, `--blood-deep #9B000C`, `--ash #2A2A2A`, `--chalk #FFFFFF`, `--gold #F5C518` (gold only for premium).
 - Fonts: Anton (display), Barlow / Barlow Condensed (UI).
 - Avatars are original SVG masks with keys: `raven, jester, kitsune, marionette, sentinel, vesper, nomad, oracle`.
