@@ -10,7 +10,7 @@ import { TopBar } from '@/design-system/TopBar'
 type Check = { state: 'pending' } | { state: 'ok'; info: string } | { state: 'down'; info: string }
 
 /** Every screen of the MVP and the user stories it serves (docs/requirements.md). */
-const SCREENS:{ path: string; name: string; stories: string }[] = [
+const SCREENS: { path: string; name: string; stories: string }[] = [
   { path: '/welcome', name: 'Welcome', stories: 'US-01' },
   { path: '/register', name: 'Register (18+)', stories: 'US-01' },
   { path: '/onboarding/dna', name: 'Game DNA', stories: 'US-02' },

@@ -79,9 +79,9 @@ prompts/                  промпти кожної контрольної т�
 - **Публічні дані про людину — лише через `PublicUser`.** Ніколи не віддавай email, `birth_date`, `password_hash`.
 - **Час — UTC** (`utcnow()` з `models/_base.py`), ідентифікатори — UUID.
 - **WS-події** розсилай через `hub.send_to_user(s)` після `commit`, у форматі з [contracts/api.md](docs/contracts/api.md#websocket-apiv1wstokenjwt).
-- **UI:** лише примітиви з `design-system/` і CSS-змінні з `tokens.css`; без вкладених `<button>`; поважай `prefers-reduced-motion`. Тексти інтерфейсу англійською.
+- **UI:** лише примітиви з `design-system/` і CSS-змінні з `tokens.css` (правила форм і руху — [docs/design-system.md](docs/design-system.md)); без вкладених `<button>`; поважай `prefers-reduced-motion`. Тексти інтерфейсу англійською.
 - **Тести:** на кожне бізнес-правило — тест із граничним значенням (17 років 364 дні / 18 років; 14:59 / 15:00 хв; 24 год 0 хв).
-- **Коміти:** Conventional Commits, як в історії репозиторію: `feat(api): …`, `fix(web): …`, `docs(cp4): …`, `test: …`.
+- **Коміти:** Conventional Commits, як в історії репозиторію: `feat(api): …`, `fix(web): …`, `docs(cp4): …`, `test: …`. Автор коміту — людина з команди: **без трейлерів `Co-Authored-By` і згадок ШІ в повідомленні**. Використання ШІ фіксуємо в [docs/ai-log.md](docs/ai-log.md), а не в історії git.
 
 ## Заборони
 
