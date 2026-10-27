@@ -22,6 +22,7 @@
 
 ```bash
 python dev.py                       # усе разом: залежності, seed, API :8000 + web :5173
+python dev.py --fresh               # те саме, але з новою демо-базою (свіжі дати івентів)
 docker compose up --build           # альтернатива з PostgreSQL
 
 # API (з apps/api; на Windows .venv/Scripts/ замість .venv/bin/)

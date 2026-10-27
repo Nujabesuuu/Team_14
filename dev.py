@@ -20,6 +20,7 @@ WEB = ROOT / "apps" / "web"
 VENV = API / ".venv"
 VENV_PY = VENV / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
 INSTALLED_MARK = VENV / ".teamate-installed"
+DEMO_DB = API / "teamate.db"
 
 
 def step(msg: str) -> None:
@@ -69,6 +70,7 @@ def wait_for(url: str, timeout: float = 30) -> bool:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--no-seed", action="store_true", help="skip demo data (seed is idempotent anyway)")
+    parser.add_argument("--fresh", action="store_true", help="move the local demo DB aside and reseed with today's dates")
     args = parser.parse_args()
 
     if sys.version_info < (3, 12):
@@ -76,6 +78,11 @@ def main() -> None:
 
     ensure_api_deps()
     ensure_web_deps()
+    # Seed skips a filled DB, so event dates stay where they were on the first run.
+    if args.fresh and DEMO_DB.exists():
+        backup = DEMO_DB.with_name(f"teamate.backup-{time.strftime('%Y%m%d-%H%M%S')}.db")
+        DEMO_DB.rename(backup)
+        step(f"Moved the old demo DB to {backup.relative_to(ROOT)}")
     if not args.no_seed:
         step("Seeding demo data (python -m app.seed)")
         run([str(VENV_PY), "-m", "app.seed"], cwd=API)
