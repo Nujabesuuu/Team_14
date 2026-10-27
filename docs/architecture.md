@@ -4,7 +4,7 @@
 
 ```mermaid
 flowchart LR
-  subgraph Client["apps/web — React 18 + TS (Capacitor → Android)"]
+  subgraph Client["apps/web — React 19 + TS (Capacitor → Android)"]
     UI[Pages / features] --> Stores[Zustand stores]
     Stores --> Api[api/client.ts<br/>fetch + JWT]
     Stores --> WS[api/ws.ts<br/>WebSocket + reconnect]
@@ -32,7 +32,7 @@ flowchart LR
 | Domain | `app/domain/` | Чисті функції: стан-машина івенту, правила метчу, стадії reveal, формула сумісності. Жодного I/O. | `tests/domain/` без БД |
 | Services | `app/services/` | Транзакції, перевірка прав, виклик доменних правил, розсилка WebSocket-подій | `tests/api/` через HTTP |
 | Routers | `app/routers/` | Тонкі HTTP-обгортки: валідація Pydantic → сервіс → схема відповіді | `tests/api/` |
-| Models | `app/models/` | SQLAlchemy-таблиці (див. [data-model.md](data-model.md)) | |
+| Models | `app/models/` | SQLAlchemy-таблиці (див. [contracts/data-schema.md](contracts/data-schema.md)) | |
 | WS hub | `app/ws/hub.py` | `dict[user_id, set[WebSocket]]` у пам'яті процесу; `send_to_user(s)` | `tests/api/test_chat.py` |
 
 **Чому домен окремо.** Правила на кшталт «метч тільки при взаємному *closer*» або «фото стає чітким лише за згодою обох» — це продукт. Вони мають читатись і перевірятись без FastAPI та БД. Сервіси лише «підключають» їх до сховища.

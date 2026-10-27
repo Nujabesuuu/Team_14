@@ -21,6 +21,7 @@ import { Chat } from '@/pages/Chat'
 import { Discover } from '@/pages/Discover'
 import { Likes } from '@/pages/Likes'
 import { Profile } from '@/pages/Profile'
+import { Status } from '@/pages/Status'
 
 function Splash() {
   return (
@@ -111,6 +112,9 @@ export function App() {
             <Route path="/chat/:conversationId" element={<Chat />} />
             <Route path="/likes" element={<Likes />} />
           </Route>
+
+          {/* Walking-skeleton check (KT4): public, works logged in or out. */}
+          <Route path="/status" element={<Status />} />
 
           <Route path="*" element={<Navigate to="/events" replace />} />
         </Routes>

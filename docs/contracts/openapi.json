@@ -1,0 +1,2627 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Teamate API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Api V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/db": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health Db",
+        "description": "Walking-skeleton check: the API can open a connection and run a query.",
+        "operationId": "health_db_api_v1_health_db_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Db Api V1 Health Db Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register",
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Get Me",
+        "operationId": "get_me_api_v1_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Update Me",
+        "operationId": "update_me_api_v1_me_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/photo": {
+      "post": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Upload Photo",
+        "operationId": "upload_photo_api_v1_me_photo_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_photo_api_v1_me_photo_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/premium": {
+      "post": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Toggle Premium",
+        "description": "Dev-only stand-in for a payment provider: flips Teamate+ on or off.",
+        "operationId": "toggle_premium_api_v1_me_premium_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PremiumToggle"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/games": {
+      "get": {
+        "tags": [
+          "games"
+        ],
+        "summary": "List Games",
+        "operationId": "list_games_api_v1_games_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GameOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Games Api V1 Games Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "tags": [
+          "events"
+        ],
+        "summary": "List Events",
+        "operationId": "list_events_api_v1_events_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Game Id"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/EventKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/EventStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "mine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Mine"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventOut"
+                  },
+                  "title": "Response List Events Api V1 Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Create Event",
+        "operationId": "create_event_api_v1_events_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{event_id}": {
+      "get": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Get Event",
+        "operationId": "get_event_api_v1_events__event_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{event_id}/join": {
+      "post": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Join",
+        "operationId": "join_api_v1_events__event_id__join_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{event_id}/leave": {
+      "post": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Leave",
+        "operationId": "leave_api_v1_events__event_id__leave_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{event_id}/start": {
+      "post": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Start",
+        "operationId": "start_api_v1_events__event_id__start_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{event_id}/finish": {
+      "post": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Finish",
+        "operationId": "finish_api_v1_events__event_id__finish_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{event_id}/cancel": {
+      "post": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Cancel",
+        "operationId": "cancel_api_v1_events__event_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{event_id}/feedback": {
+      "get": {
+        "tags": [
+          "feedback"
+        ],
+        "summary": "Pending",
+        "operationId": "pending_api_v1_events__event_id__feedback_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingFeedbackOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "feedback"
+        ],
+        "summary": "Submit",
+        "operationId": "submit_api_v1_events__event_id__feedback_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/discover": {
+      "get": {
+        "tags": [
+          "discover"
+        ],
+        "summary": "Discover",
+        "operationId": "discover_api_v1_discover_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Mode",
+              "default": "duo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoverOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/likes/incoming": {
+      "get": {
+        "tags": [
+          "discover"
+        ],
+        "summary": "Incoming Likes",
+        "operationId": "incoming_likes_api_v1_likes_incoming_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DiscoverCard"
+                  },
+                  "type": "array",
+                  "title": "Response Incoming Likes Api V1 Likes Incoming Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/swipes": {
+      "post": {
+        "tags": [
+          "discover"
+        ],
+        "summary": "Swipe",
+        "operationId": "swipe_api_v1_swipes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwipeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwipeResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/swipes/undo": {
+      "post": {
+        "tags": [
+          "discover"
+        ],
+        "summary": "Undo",
+        "operationId": "undo_api_v1_swipes_undo_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/matches": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "summary": "List Matches",
+        "operationId": "list_matches_api_v1_matches_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatchOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Matches Api V1 Matches Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/matches/{match_id}": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "summary": "Get Match",
+        "operationId": "get_match_api_v1_matches__match_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/reveal/consent": {
+      "post": {
+        "tags": [
+          "reveal"
+        ],
+        "summary": "Consent",
+        "operationId": "consent_api_v1_matches__match_id__reveal_consent_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/reveal/early-request": {
+      "post": {
+        "tags": [
+          "reveal"
+        ],
+        "summary": "Early Request",
+        "operationId": "early_request_api_v1_matches__match_id__reveal_early_request_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/reveal/early-accept": {
+      "post": {
+        "tags": [
+          "reveal"
+        ],
+        "summary": "Early Accept",
+        "operationId": "early_accept_api_v1_matches__match_id__reveal_early_accept_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/conversations/{conversation_id}/messages": {
+      "get": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Messages",
+        "operationId": "messages_api_v1_conversations__conversation_id__messages_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MessageOut"
+                  },
+                  "title": "Response Messages Api V1 Conversations  Conversation Id  Messages Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Send",
+        "description": "HTTP fallback for sending; the WebSocket path is preferred by the client.",
+        "operationId": "send_api_v1_conversations__conversation_id__messages_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/blocks": {
+      "post": {
+        "tags": [
+          "safety"
+        ],
+        "summary": "Block",
+        "operationId": "block_api_v1_blocks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccountOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "age": {
+            "type": "integer",
+            "title": "Age"
+          },
+          "is_premium": {
+            "type": "boolean",
+            "title": "Is Premium"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "display_name",
+          "age",
+          "is_premium"
+        ],
+        "title": "AccountOut"
+      },
+      "AvatarKey": {
+        "type": "string",
+        "enum": [
+          "operator",
+          "impostor",
+          "duelist",
+          "strategist",
+          "vanguard",
+          "sage",
+          "pilot",
+          "builder"
+        ],
+        "title": "AvatarKey"
+      },
+      "BlockIn": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "title": "BlockIn"
+      },
+      "Body_upload_photo_api_v1_me_photo_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_photo_api_v1_me_photo_post"
+      },
+      "Comms": {
+        "type": "string",
+        "enum": [
+          "voice",
+          "text",
+          "both"
+        ],
+        "title": "Comms"
+      },
+      "DiscoverCard": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/PublicUser"
+          },
+          "bio": {
+            "type": "string",
+            "title": "Bio"
+          },
+          "modes": {
+            "items": {
+              "$ref": "#/components/schemas/Mode"
+            },
+            "type": "array",
+            "title": "Modes"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playstyle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Playstyle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Comms"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "schedule": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Schedule"
+          },
+          "games": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileGameOut"
+            },
+            "type": "array",
+            "title": "Games"
+          },
+          "compatibility": {
+            "type": "integer",
+            "title": "Compatibility"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "bio",
+          "modes",
+          "role",
+          "playstyle",
+          "comms",
+          "schedule",
+          "games",
+          "compatibility"
+        ],
+        "title": "DiscoverCard"
+      },
+      "DiscoverOut": {
+        "properties": {
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/DiscoverCard"
+            },
+            "type": "array",
+            "title": "Cards"
+          },
+          "rights_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rights Left"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cards",
+          "rights_left"
+        ],
+        "title": "DiscoverOut"
+      },
+      "EventCreate": {
+        "properties": {
+          "game_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Game Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EventKind",
+            "default": "squad"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 3,
+            "title": "Title"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "max_slots": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 2.0,
+            "title": "Max Slots",
+            "default": 2
+          }
+        },
+        "type": "object",
+        "required": [
+          "game_id",
+          "title",
+          "starts_at"
+        ],
+        "title": "EventCreate"
+      },
+      "EventKind": {
+        "type": "string",
+        "enum": [
+          "squad",
+          "game_date"
+        ],
+        "title": "EventKind"
+      },
+      "EventOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "host": {
+            "$ref": "#/components/schemas/PublicUser"
+          },
+          "game": {
+            "$ref": "#/components/schemas/GameOut"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EventKind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "max_slots": {
+            "type": "integer",
+            "title": "Max Slots"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EventStatus"
+          },
+          "participants": {
+            "items": {
+              "$ref": "#/components/schemas/PublicUser"
+            },
+            "type": "array",
+            "title": "Participants"
+          },
+          "is_host": {
+            "type": "boolean",
+            "title": "Is Host"
+          },
+          "is_participant": {
+            "type": "boolean",
+            "title": "Is Participant"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "host",
+          "game",
+          "kind",
+          "title",
+          "starts_at",
+          "max_slots",
+          "status",
+          "participants",
+          "is_host",
+          "is_participant",
+          "created_at"
+        ],
+        "title": "EventOut"
+      },
+      "EventStatus": {
+        "type": "string",
+        "enum": [
+          "open",
+          "full",
+          "in_progress",
+          "finished",
+          "cancelled"
+        ],
+        "title": "EventStatus"
+      },
+      "FeedbackAnswer": {
+        "type": "string",
+        "enum": [
+          "again",
+          "closer",
+          "no"
+        ],
+        "title": "FeedbackAnswer"
+      },
+      "FeedbackIn": {
+        "properties": {
+          "to_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To User Id"
+          },
+          "answer": {
+            "$ref": "#/components/schemas/FeedbackAnswer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "to_user_id",
+          "answer"
+        ],
+        "title": "FeedbackIn"
+      },
+      "FeedbackResult": {
+        "properties": {
+          "match_created": {
+            "type": "boolean",
+            "title": "Match Created"
+          },
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_created"
+        ],
+        "title": "FeedbackResult"
+      },
+      "GameOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "is_chill": {
+            "type": "boolean",
+            "title": "Is Chill"
+          },
+          "cover_color": {
+            "type": "string",
+            "title": "Cover Color"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "is_chill",
+          "cover_color"
+        ],
+        "title": "GameOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginIn": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginIn"
+      },
+      "MatchOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "other": {
+            "$ref": "#/components/schemas/PublicUser"
+          },
+          "source": {
+            "$ref": "#/components/schemas/MatchSource"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Conversation Id"
+          },
+          "reveal": {
+            "$ref": "#/components/schemas/RevealState"
+          },
+          "compatibility": {
+            "type": "integer",
+            "title": "Compatibility"
+          },
+          "last_message": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MessageOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "other",
+          "source",
+          "conversation_id",
+          "reveal",
+          "compatibility",
+          "created_at"
+        ],
+        "title": "MatchOut"
+      },
+      "MatchSource": {
+        "type": "string",
+        "enum": [
+          "post_game",
+          "mutual_like"
+        ],
+        "title": "MatchSource"
+      },
+      "MeOut": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AccountOut"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/ProfileOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "profile"
+        ],
+        "title": "MeOut"
+      },
+      "MessageIn": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "MessageIn"
+      },
+      "MessageOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Conversation Id"
+          },
+          "sender_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sender Id"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "conversation_id",
+          "sender_id",
+          "body",
+          "created_at"
+        ],
+        "title": "MessageOut"
+      },
+      "Mode": {
+        "type": "string",
+        "enum": [
+          "duo",
+          "friends",
+          "dating"
+        ],
+        "title": "Mode"
+      },
+      "PendingFeedbackOut": {
+        "properties": {
+          "pending": {
+            "items": {
+              "$ref": "#/components/schemas/PublicUser"
+            },
+            "type": "array",
+            "title": "Pending"
+          },
+          "done": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pending",
+          "done"
+        ],
+        "title": "PendingFeedbackOut"
+      },
+      "PhotoOut": {
+        "properties": {
+          "photo_url": {
+            "type": "string",
+            "title": "Photo Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "photo_url"
+        ],
+        "title": "PhotoOut"
+      },
+      "Playstyle": {
+        "type": "string",
+        "enum": [
+          "casual",
+          "competitive"
+        ],
+        "title": "Playstyle"
+      },
+      "PremiumToggle": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "PremiumToggle"
+      },
+      "ProfileGameIn": {
+        "properties": {
+          "game_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Game Id"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "game_id"
+        ],
+        "title": "ProfileGameIn"
+      },
+      "ProfileGameOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ],
+        "title": "ProfileGameOut"
+      },
+      "ProfileOut": {
+        "properties": {
+          "bio": {
+            "type": "string",
+            "title": "Bio"
+          },
+          "avatar_key": {
+            "$ref": "#/components/schemas/AvatarKey"
+          },
+          "accent_color": {
+            "type": "string",
+            "title": "Accent Color"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "modes": {
+            "items": {
+              "$ref": "#/components/schemas/Mode"
+            },
+            "type": "array",
+            "title": "Modes"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playstyle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Playstyle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Comms"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "schedule": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Schedule"
+          },
+          "toxicity_tolerance": {
+            "type": "integer",
+            "title": "Toxicity Tolerance"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "games": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileGameOut"
+            },
+            "type": "array",
+            "title": "Games"
+          },
+          "onboarded": {
+            "type": "boolean",
+            "title": "Onboarded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bio",
+          "avatar_key",
+          "accent_color",
+          "photo_url",
+          "modes",
+          "role",
+          "playstyle",
+          "comms",
+          "schedule",
+          "toxicity_tolerance",
+          "timezone",
+          "games",
+          "onboarded"
+        ],
+        "title": "ProfileOut"
+      },
+      "ProfileUpdate": {
+        "properties": {
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio"
+          },
+          "avatar_key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AvatarKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "accent_color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accent Color"
+          },
+          "modes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Mode"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modes"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playstyle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Playstyle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Comms"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule"
+          },
+          "toxicity_tolerance": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Toxicity Tolerance"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "games": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ProfileGameIn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Games"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "title": "ProfileUpdate"
+      },
+      "PublicUser": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "age": {
+            "type": "integer",
+            "title": "Age"
+          },
+          "avatar_key": {
+            "$ref": "#/components/schemas/AvatarKey"
+          },
+          "accent_color": {
+            "type": "string",
+            "title": "Accent Color"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "is_premium": {
+            "type": "boolean",
+            "title": "Is Premium",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "age",
+          "avatar_key",
+          "accent_color"
+        ],
+        "title": "PublicUser",
+        "description": "What other users may see about someone. Never includes email or birth date."
+      },
+      "RegisterIn": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 2,
+            "title": "Display Name"
+          },
+          "birth_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Birth Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password",
+          "display_name",
+          "birth_date"
+        ],
+        "title": "RegisterIn"
+      },
+      "RevealState": {
+        "properties": {
+          "my_stage": {
+            "type": "integer",
+            "title": "My Stage"
+          },
+          "their_stage": {
+            "type": "integer",
+            "title": "Their Stage"
+          },
+          "my_consent": {
+            "type": "boolean",
+            "title": "My Consent"
+          },
+          "their_consent": {
+            "type": "boolean",
+            "title": "Their Consent"
+          },
+          "early_request_from_me": {
+            "type": "boolean",
+            "title": "Early Request From Me"
+          },
+          "early_request_from_them": {
+            "type": "boolean",
+            "title": "Early Request From Them"
+          }
+        },
+        "type": "object",
+        "required": [
+          "my_stage",
+          "their_stage",
+          "my_consent",
+          "their_consent",
+          "early_request_from_me",
+          "early_request_from_them"
+        ],
+        "title": "RevealState"
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "support",
+          "carry",
+          "flex",
+          "tank",
+          "igl"
+        ],
+        "title": "Role"
+      },
+      "SwipeDirection": {
+        "type": "string",
+        "enum": [
+          "left",
+          "right"
+        ],
+        "title": "SwipeDirection"
+      },
+      "SwipeIn": {
+        "properties": {
+          "to_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To User Id"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/SwipeDirection"
+          }
+        },
+        "type": "object",
+        "required": [
+          "to_user_id",
+          "direction"
+        ],
+        "title": "SwipeIn"
+      },
+      "SwipeResult": {
+        "properties": {
+          "match_created": {
+            "type": "boolean",
+            "title": "Match Created"
+          },
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Id"
+          },
+          "rights_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rights Left"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_created",
+          "rights_left"
+        ],
+        "title": "SwipeResult"
+      },
+      "TokenOut": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AccountOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "user"
+        ],
+        "title": "TokenOut"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
