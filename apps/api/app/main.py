@@ -4,10 +4,12 @@ from pathlib import Path
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import get_settings
-from app.core.db import create_all
-from app.core.errors import install_error_handlers
+from app.core.db import create_all, engine
+from app.core.errors import ApiError, install_error_handlers
 
 API_PREFIX = "/api/v1"
 
@@ -40,6 +42,16 @@ def create_app() -> FastAPI:
     @api.get("/health", tags=["meta"])
     async def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @api.get("/health/db", tags=["meta"])
+    async def health_db() -> dict[str, str]:
+        """Walking-skeleton check: the API can open a connection and run a query."""
+        try:
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
+        except SQLAlchemyError as exc:
+            raise ApiError(503, "DB_UNAVAILABLE", "Database is not reachable") from exc
+        return {"status": "ok", "database": engine.dialect.name}
 
     from app.routers import register_routers
 
