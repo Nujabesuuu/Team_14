@@ -9,43 +9,71 @@
 | КТ1. Команда та стартова ідея | [Розділи 1–4](#1-назва-проєкту-та-склад-команди) |
 | КТ2. Аудиторія, ціннісна пропозиція, критичний аналіз | [5. Цільова аудиторія](#5-цільова-аудиторія) · [6. Jobs, Pains, Gains](#6-задачі-болі-вигоди-та-ціннісна-пропозиція) · [7. Критичний аналіз](#7-критичний-аналіз). Промпти в [`prompts/`](prompts/), повні відповіді ШІ в [`docs/research/`](docs/research/) |
 | КТ3. Вимоги, User Stories, MVP | **[docs/requirements.md](docs/requirements.md)**: шлях користувача, карта історій і межі MVP, User Stories, критерії приймання (Given-When-Then). Промпти 3.1–3.5 в [`prompts/`](prompts/), повні відповіді ШІ в [`docs/research/`](docs/research/) |
+| КТ4. Архітектура і каркас | [Технічний аналіз вимог](docs/technical-analysis.md) · [ADR](docs/adr/) · [Контракти: схема даних, API, помилки](docs/contracts/) · [CLAUDE.md](CLAUDE.md) · [Walking Skeleton: запуск і перевірка](#швидкий-старт). Промпти 4.1–4.4 в [`prompts/`](prompts/). Звіт і сценарій демо: [docs/kt4-report.md](docs/kt4-report.md) |
 | Робочий MVP | [`apps/`](apps/), запуск нижче |
 
 ---
 
 ## Швидкий старт
 
-**Варіант A — без Docker (SQLite):**
+Потрібні **Python 3.12+** і **Node.js 22+** (або лише Docker для варіанта B).
+
+**Варіант A — одна команда, без Docker (SQLite).** Працює на Windows, macOS і Linux:
 
 ```bash
-# API (Python 3.12+)
-cd apps/api
-python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
-.venv/bin/python -m app.seed                      # 12 демо-акаунтів, ігри, івенти
-.venv/bin/uvicorn app.main:app --reload --port 8000
+python dev.py
 ```
 
-```bash
-# Web (Node 22) — в іншому терміналі
-cd apps/web
-npm install
-npm run dev                                       # http://localhost:5173
-```
+Під час першого запуску скрипт створить `apps/api/.venv`, поставить залежності API і клієнта та наповнить БД демо-даними (≈ 1–2 хв). Потім він запускає API на `:8000` і клієнт на `:5173`, а Ctrl+C зупиняє обидва. На macOS/Linux може знадобитись `python3 dev.py`.
 
 **Варіант B — Docker Compose (PostgreSQL):**
 
 ```bash
 docker compose up --build
-docker compose exec api python -m app.seed
+docker compose exec api python -m app.seed        # демо-дані, за потреби
 ```
+
+### Перевірка каркаса (Walking Skeleton)
+
+| Шар | Як перевірити | Очікувано |
+|---|---|---|
+| API | http://localhost:8000/api/v1/health | `{"status":"ok"}` |
+| База даних | http://localhost:8000/api/v1/health/db | `{"status":"ok","database":"sqlite"}` (у Docker — `postgresql`) |
+| UI | http://localhost:5173/status | Назва проєкту, перелік екранів з історіями, живий стан Web / API / Database |
+| Формат помилок | http://localhost:8000/api/v1/no-such-route | `{"code":"NOT_FOUND","detail":"Not Found"}` |
+| Документація API | http://localhost:8000/docs | Swagger UI |
+
+```bash
+curl http://localhost:8000/api/v1/health
+```
+
+<details>
+<summary>Ручний запуск по частинах (якщо потрібно)</summary>
+
+```bash
+# API (на Windows: .venv\Scripts\ замість .venv/bin/)
+cd apps/api
+python -m venv .venv && .venv/bin/pip install -e ".[dev]"
+.venv/bin/python -m app.seed                      # 12 демо-акаунтів, ігри, івенти
+.venv/bin/uvicorn app.main:app --reload --port 8000
+```
+
+```bash
+# Web — в іншому терміналі
+cd apps/web
+npm ci
+npm run dev                                       # http://localhost:5173
+```
+
+</details>
 
 Демо-акаунти: `user01@teamate.dev` … `user12@teamate.dev`, пароль `demo1234`. Чат і reveal можна перевірити самому: бот **Guide** автоматично метчиться з кожним акаунтом, відповідає й погоджується на reveal. Для повного циклу з івентом відкрийте дві вкладки (токен живе в `sessionStorage`, тому це два незалежні акаунти) і пройдіть [сценарій демо](docs/demo.md). OpenAPI: http://localhost:8000/docs.
 
 **Тести:**
 
 ```bash
-cd apps/api && .venv/bin/ruff check app tests && .venv/bin/pytest -q     # 69 тестів
-cd apps/web && npm run typecheck && npm run lint && npm test              # 18 тестів (+1 пропущений, поки немає портретів)
+cd apps/api && .venv/bin/ruff check app tests && .venv/bin/pytest -q     # 72 тести
+cd apps/web && npm run typecheck && npm run lint && npm test              # 20 тестів (+1 пропущений, поки немає портретів)
 ```
 
 **Android:** див. [docs/android.md](docs/android.md) (`npx cap add android && npm run cap:sync`).
@@ -55,10 +83,14 @@ cd apps/web && npm run typecheck && npm run lint && npm test              # 18 �
 ```
 apps/api/        FastAPI: app/domain (чисті правила) · services · routers · ws · seed.py · tests/
 apps/web/        React 19 + TS + Vite: design-system (Phantom UI) · avatars · pages · features · stores · api
-prompts/         промпти КТ2 (аудиторія, VPC, критичний аналіз) і КТ3 (шлях, історії, MVP, критерії приймання)
-docs/            requirements · architecture · data-model · api · design-system · demo · android · ai-log · adr/
+prompts/         промпти КТ2 (аудиторія, VPC, критичний аналіз), КТ3 (шлях, історії, MVP, критерії) і КТ4 (аналіз, ADR, контракти, каркас)
+docs/            requirements · technical-analysis · architecture · design-system · demo · android · ai-log · kt4-report
+docs/adr/        архітектурні рішення 0001–0010 і обмеження команди
+docs/contracts/  схема даних · API · формат помилок · openapi.json
 docs/research/   повні відповіді ШІ на промпти КТ2 і КТ3
 docs/superpowers/  spec і план реалізації MVP
+CLAUDE.md        правила для ШІ-асистента
+dev.py           запуск усього проєкту однією командою
 docker-compose.yml · .github/workflows/ci.yml
 ```
 
@@ -67,15 +99,19 @@ docker-compose.yml · .github/workflows/ci.yml
 | Документ | Що всередині |
 |---|---|
 | [requirements.md](docs/requirements.md) | Вимоги КТ3: User Journey, карта історій, In Scope / Out of Scope, User Stories MVP, Acceptance Criteria |
+| [technical-analysis.md](docs/technical-analysis.md) | КТ4: сутності, життєві цикли, бізнес-правила BR-xx, заборони NEVER-xx, припущення, прогалини |
 | [architecture.md](docs/architecture.md) | Шари, діаграми, потік подій, обмеження MVP |
-| [data-model.md](docs/data-model.md) | ER-діаграма, ключові рішення по схемі, enum-и |
-| [api.md](docs/api.md) | Усі ендпоінти, коди помилок, протокол WebSocket |
+| [contracts/data-schema.md](docs/contracts/data-schema.md) | Таблиці, типи, ключі й обмеження, ER-діаграма, enum-и |
+| [contracts/api.md](docs/contracts/api.md) | Ендпоінти під кожну історію MVP, статус-коди, протокол WebSocket, трасування |
+| [contracts/errors.md](docs/contracts/errors.md) | Єдиний формат помилок і каталог кодів |
+| [CLAUDE.md](CLAUDE.md) | Правила для ШІ-асистента: команди, структура, правила кодогенерації, заборони |
 | [design-system.md](docs/design-system.md) | Токени, форми, рух, портрети героїв |
 | [demo.md](docs/demo.md) | Покроковий сценарій показу на двох пристроях |
 | [android.md](docs/android.md) | Збірка APK через Capacitor |
 | [ai-log.md](docs/ai-log.md) | Журнал використання ШІ: що прийнято, що відкинуто, які дефекти знайдено |
-| [prompts/](prompts/) · [research/](docs/research/) | Промпти КТ2–КТ3 (фінальна й перша версія, що змінили) і повні відповіді ШІ на них |
-| [adr/](docs/adr/) | Архітектурні рішення: FastAPI, Capacitor, reveal-модель, WS-хаб |
+| [prompts/](prompts/) · [research/](docs/research/) | Промпти КТ2–КТ4 (фінальна й перша версія, що змінили) і повні відповіді ШІ на промпти КТ2–КТ3 |
+| [adr/](docs/adr/) | Архітектурні рішення з порівнянням варіантів: репозиторій, UI, бекенд, БД, автентифікація, формат API, фото, WS-хаб |
+| [kt4-report.md](docs/kt4-report.md) | Звіт КТ4 і сценарій 3-хвилинного демо |
 | [spec](docs/superpowers/specs/2026-09-18-teamate-mvp-design.md) · [plan](docs/superpowers/plans/2026-09-19-teamate-mvp.md) | Специфікація та план, за якими будувався MVP |
 
 ---
@@ -351,8 +387,8 @@ docker-compose.yml · .github/workflows/ci.yml
 | Кому | Питання | Статус |
 |---|---|---|
 | Євгеній Опря, Team Lead | Якщо до кінця семестру можна перевірити лише один сценарій, який ми обираємо? | **Відповіли на КТ2:** основний сценарій — знайомство через спільну гру. Пошук тіммейта лишається точкою входу |
-| Георгій Черних, Backend | Яке серверне правило робить «спільну гру» чимось більшим, ніж два запити від однієї людини? | До КТ4 (правило з загрози 4) |
-| Максим Мигаль, DevOps | Де фізично лежить оригінал фото, за якою адресою він доступний і скільки діє посилання? Як користувач із закритим застосунком дізнається, що відкрилось «Зіграємо ще?»? | До КТ4 |
+| Георгій Черних, Backend | Яке серверне правило робить «спільну гру» чимось більшим, ніж два запити від однієї людини? | **Відповіли на КТ4:** BR-11 у [технічному аналізі](docs/technical-analysis.md#3-бізнес-правила) (≥ 15 хв і 2 підтвердження від різних людей) і контракт `POST /events/{id}/confirm` |
+| Максим Мигаль, DevOps | Де фізично лежить оригінал фото, за якою адресою він доступний і скільки діє посилання? Як користувач із закритим застосунком дізнається, що відкрилось «Зіграємо ще?»? | **Фото — відповіли на КТ4:** [ADR-0010](docs/adr/0010-private-photo-storage.md) (приватна папка, видача лише через `GET /photos/{user_id}` з перевіркою стадії). Сповіщення лишаються в Post-MVP |
 | Ярослав Шах, BA/QA | Назвіть поіменно людей, які прийдуть на перший івент, і дату. Напишіть тест-кейси: 17-річний у лобі з дорослим; заблокований приєднується до івенту | **Тест-кейси закрито на КТ3:** вони стали сценаріями Given-When-Then для US-01, US-06 і US-08 у [requirements.md](docs/requirements.md#4-критерії-приймання-acceptance-criteria). Список людей і дату першого івенту ще готуємо |
 
 ### Пріоритети наступної ітерації
