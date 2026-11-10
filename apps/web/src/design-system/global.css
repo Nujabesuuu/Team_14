@@ -176,3 +176,10 @@ button {
 .deal-in {
   animation: dealIn 260ms var(--ease-snap) both;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp-in,
+  .deal-in {
+    animation: none;
+  }
+}

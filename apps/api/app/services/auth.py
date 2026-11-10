@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import ApiError
+from app.core.errors import ApiError, account_banned
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models import Profile, User
 from app.schemas.auth import LoginIn, RegisterIn
@@ -29,4 +29,7 @@ async def login(session: AsyncSession, data: LoginIn) -> tuple[User, str]:
     user = await session.scalar(select(User).where(User.email == data.email.lower()))
     if user is None or not verify_password(data.password, user.password_hash):
         raise ApiError(401, "INVALID_CREDENTIALS", "Wrong email or password")
+    # After the password check, so only the owner learns that the account is banned.
+    if user.is_banned:
+        raise account_banned()
     return user, create_access_token(user.id)

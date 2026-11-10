@@ -5,7 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_session
-from app.core.errors import ApiError
+from app.core.errors import ApiError, account_banned
 from app.core.security import decode_access_token
 from app.models import User
 
@@ -26,6 +26,9 @@ async def get_current_user(
     user = await session.get(User, user_id)
     if user is None:
         raise ApiError(401, "UNAUTHORIZED", "User no longer exists")
+    if user.is_banned:
+        # Checked on every request, so a ban ends sessions that were already open.
+        raise account_banned()
     return user
 
 

@@ -61,8 +61,12 @@ async def last_message(session: AsyncSession, conversation_id: uuid.UUID) -> Mes
     )
 
 
+def _other(match: Match, viewer_id: uuid.UUID) -> User:
+    return match.user_b if viewer_id == match.user_a_id else match.user_a
+
+
 async def match_out(session: AsyncSession, match: Match, viewer: User) -> MatchOut:
-    other = match.user_b if viewer.id == match.user_a_id else match.user_a
+    other = _other(match, viewer.id)
     msg = await last_message(session, match.conversation.id)
     return MatchOut(
         id=match.id,
@@ -84,7 +88,7 @@ async def list_matches(session: AsyncSession, viewer: User) -> list[MatchOut]:
             .order_by(desc(Match.created_at))
         )
     ).all()
-    return [await match_out(session, m, viewer) for m in matches]
+    return [await match_out(session, m, viewer) for m in matches if not _other(m, viewer.id).is_banned]
 
 
 async def get_match_for(session: AsyncSession, match_id: uuid.UUID, viewer_id: uuid.UUID) -> Match:
@@ -93,4 +97,7 @@ async def get_match_for(session: AsyncSession, match_id: uuid.UUID, viewer_id: u
         raise ApiError(404, "MATCH_NOT_FOUND", "Match not found")
     if not match.involves(viewer_id):
         raise ApiError(403, "NOT_YOUR_MATCH", "You are not part of this match")
+    if _other(match, viewer_id).is_banned:
+        # Same answer as for a match that never existed: the list no longer shows it either.
+        raise ApiError(404, "MATCH_NOT_FOUND", "Match not found")
     return match

@@ -1403,6 +1403,198 @@
           }
         ]
       }
+    },
+    "/api/v1/reports": {
+      "post": {
+        "tags": [
+          "safety"
+        ],
+        "summary": "Create Report",
+        "operationId": "create_report_api_v1_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/reports/mine": {
+      "get": {
+        "tags": [
+          "safety"
+        ],
+        "summary": "My Reports",
+        "operationId": "my_reports_api_v1_reports_mine_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MyReportOut"
+                  },
+                  "type": "array",
+                  "title": "Response My Reports Api V1 Reports Mine Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/moderation/reports": {
+      "get": {
+        "tags": [
+          "moderation"
+        ],
+        "summary": "Moderation Queue",
+        "operationId": "moderation_queue_api_v1_moderation_reports_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ReportStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModerationReportOut"
+                  },
+                  "title": "Response Moderation Queue Api V1 Moderation Reports Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/moderation/reports/{report_id}/decision": {
+      "post": {
+        "tags": [
+          "moderation"
+        ],
+        "summary": "Decide",
+        "operationId": "decide_api_v1_moderation_reports__report_id__decision_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModerationReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1429,6 +1621,9 @@
           "is_premium": {
             "type": "boolean",
             "title": "Is Premium"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
           }
         },
         "type": "object",
@@ -1437,7 +1632,8 @@
           "email",
           "display_name",
           "age",
-          "is_premium"
+          "is_premium",
+          "role"
         ],
         "title": "AccountOut"
       },
@@ -1491,6 +1687,24 @@
           "both"
         ],
         "title": "Comms"
+      },
+      "DecisionIn": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "dismissed",
+              "warned",
+              "banned"
+            ],
+            "title": "Decision"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "DecisionIn"
       },
       "DiscoverCard": {
         "properties": {
@@ -1982,6 +2196,144 @@
         ],
         "title": "Mode"
       },
+      "ModerationReportOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "reporter": {
+            "$ref": "#/components/schemas/PublicUser"
+          },
+          "reported": {
+            "$ref": "#/components/schemas/PublicUser"
+          },
+          "context": {
+            "$ref": "#/components/schemas/ReportContext"
+          },
+          "context_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Context Id"
+          },
+          "context_label": {
+            "type": "string",
+            "title": "Context Label"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ReportReason"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReportStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "moderator": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublicUser"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "reporter",
+          "reported",
+          "context",
+          "context_id",
+          "context_label",
+          "reason",
+          "comment",
+          "status",
+          "created_at",
+          "decided_at",
+          "moderator"
+        ],
+        "title": "ModerationReportOut",
+        "description": "The moderator's view: the only place where the reporter is named."
+      },
+      "MyReportOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "reported": {
+            "$ref": "#/components/schemas/PublicUser"
+          },
+          "context": {
+            "$ref": "#/components/schemas/ReportContext"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ReportReason"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReportStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "reported",
+          "context",
+          "reason",
+          "status",
+          "created_at",
+          "decided_at"
+        ],
+        "title": "MyReportOut",
+        "description": "What the reporter sees. Deliberately has no reporter field: nobody else may get this object."
+      },
       "PendingFeedbackOut": {
         "properties": {
           "pending": {
@@ -2442,6 +2794,78 @@
         ],
         "title": "RegisterIn"
       },
+      "ReportContext": {
+        "type": "string",
+        "enum": [
+          "event",
+          "chat",
+          "photo"
+        ],
+        "title": "ReportContext",
+        "description": "Where it happened. `context_id` on the report is the event, conversation or match id respectively."
+      },
+      "ReportCreate": {
+        "properties": {
+          "reported_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reported Id"
+          },
+          "context": {
+            "$ref": "#/components/schemas/ReportContext"
+          },
+          "context_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Context Id"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ReportReason"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reported_id",
+          "context",
+          "context_id",
+          "reason"
+        ],
+        "title": "ReportCreate"
+      },
+      "ReportReason": {
+        "type": "string",
+        "enum": [
+          "harassment",
+          "inappropriate_photo",
+          "underage",
+          "spam",
+          "other"
+        ],
+        "title": "ReportReason"
+      },
+      "ReportStatus": {
+        "type": "string",
+        "enum": [
+          "new",
+          "dismissed",
+          "warned",
+          "banned"
+        ],
+        "title": "ReportStatus",
+        "description": "`new` is the manual queue; the other three are the moderator's decision."
+      },
       "RevealState": {
         "properties": {
           "my_stage": {
@@ -2575,6 +2999,14 @@
           "user"
         ],
         "title": "TokenOut"
+      },
+      "UserRole": {
+        "type": "string",
+        "enum": [
+          "user",
+          "moderator"
+        ],
+        "title": "UserRole"
       },
       "ValidationError": {
         "properties": {

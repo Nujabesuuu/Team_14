@@ -1,5 +1,8 @@
 import type { WsEvent } from './types'
 
+/** Mirrors BANNED_CLOSE_CODE in apps/api/app/services/reports.py. */
+export const BANNED_CLOSE_CODE = 4403
+
 type Handler<T extends WsEvent['type']> = (event: Extract<WsEvent, { type: T }>) => void
 
 /**
@@ -13,6 +16,8 @@ export class RealtimeClient {
   private attempts = 0
   private closedByUser = false
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  /** Called when the server drops the socket because a moderator banned the account. */
+  onBanned: (() => void) | null = null
 
   connect(url: string) {
     this.url = url
@@ -63,8 +68,13 @@ export class RealtimeClient {
         /* ignore malformed frames */
       }
     }
-    ws.onclose = () => {
+    ws.onclose = (event) => {
       if (this.closedByUser) return
+      if (event.code === BANNED_CLOSE_CODE) {
+        this.closedByUser = true
+        this.onBanned?.()
+        return
+      }
       const delay = Math.min(10_000, 500 * 2 ** this.attempts++)
       this.reconnectTimer = setTimeout(() => this.open(), delay)
     }

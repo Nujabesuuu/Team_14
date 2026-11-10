@@ -9,14 +9,19 @@ from app.models.enums import (
     MatchSource,
     Mode,
     Playstyle,
+    ReportContext,
+    ReportReason,
+    ReportStatus,
     Role,
     SwipeDirection,
+    UserRole,
 )
 from app.models.event import Event, EventParticipant
 from app.models.feedback import PostGameFeedback
 from app.models.game import Game
 from app.models.match import Match, canonical_pair
 from app.models.profile import Profile, ProfileGame
+from app.models.report import Report
 from app.models.reveal import PhotoReveal
 from app.models.swipe import Swipe
 from app.models.user import User
@@ -41,9 +46,14 @@ __all__ = [
     "PostGameFeedback",
     "Profile",
     "ProfileGame",
+    "Report",
+    "ReportContext",
+    "ReportReason",
+    "ReportStatus",
     "Role",
     "Swipe",
     "SwipeDirection",
     "User",
+    "UserRole",
     "canonical_pair",
 ]

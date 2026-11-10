@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError } from '@/api/client'
+import type { PublicUser } from '@/api/types'
 import { Avatar } from '@/design-system/Avatar'
 import { Chip } from '@/design-system/Chip'
 import { Panel } from '@/design-system/Panel'
 import { PhantomButton } from '@/design-system/PhantomButton'
 import { TopBar } from '@/design-system/TopBar'
+import { ReportSheet } from '@/features/reports/ReportSheet'
 import { formatWhen, STATUS_LABEL } from '@/lib/format'
 import { useAuth } from '@/stores/auth'
 import { useEvents } from '@/stores/events'
@@ -19,6 +21,7 @@ export function EventDetail() {
   const { load, act } = useEvents()
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [reporting, setReporting] = useState<PublicUser | null>(null)
 
   useEffect(() => {
     load(id).catch(() => navigate('/events', { replace: true }))
@@ -135,6 +138,11 @@ export function EventDetail() {
                   </div>
                 </div>
                 {p.is_premium && <Chip tone="gold">+</Chip>}
+                {event.is_participant && p.id !== me?.user.id && (
+                  <Chip onClick={() => setReporting(p)} aria-label={`Report ${p.display_name}`}>
+                    Report
+                  </Chip>
+                )}
               </div>
             ))}
             {Array.from({ length: Math.max(0, event.max_slots - event.participants.length) }).map((_, i) => (
@@ -159,6 +167,8 @@ export function EventDetail() {
         {error && <p style={{ color: 'var(--blood)', fontWeight: 600, margin: 0 }}>{error}</p>}
         {actions}
       </div>
+
+      {reporting && <ReportSheet target={reporting} context="event" contextId={event.id} onClose={() => setReporting(null)} />}
     </div>
   )
 }

@@ -39,7 +39,7 @@ async def get_event(session: AsyncSession, event_id: uuid.UUID) -> Event:
     return event
 
 
-async def _broadcast(session: AsyncSession, event: Event) -> None:
+async def broadcast(session: AsyncSession, event: Event) -> None:
     await session.refresh(event)
     for uid in event.participant_ids:
         viewer_out = EventOut.from_event(event, uid)
@@ -112,7 +112,7 @@ async def join_event(session: AsyncSession, event: Event, user: User) -> Event:
     event.participants.append(EventParticipant(user_id=user.id))
     event.status = rules.next_status_after_join(len(event.participants), event.max_slots)
     await session.commit()
-    await _broadcast(session, event)
+    await broadcast(session, event)
     return event
 
 
@@ -123,7 +123,7 @@ async def leave_event(session: AsyncSession, event: Event, user: User) -> Event:
     event.participants = [p for p in event.participants if p.user_id != user.id]
     event.status = EventStatus.open
     await session.commit()
-    await _broadcast(session, event)
+    await broadcast(session, event)
     return event
 
 
@@ -135,7 +135,7 @@ async def transition_event(session: AsyncSession, event: Event, user: User, acti
     if action == "finish":
         await _unlock_reveals_for_matched_pairs(session, event)
     await session.commit()
-    await _broadcast(session, event)
+    await broadcast(session, event)
     return event
 
 

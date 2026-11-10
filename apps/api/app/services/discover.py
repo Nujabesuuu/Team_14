@@ -64,7 +64,7 @@ async def discover(session: AsyncSession, viewer: User, mode: Mode) -> DiscoverO
     if mode not in viewer.profile.modes:
         raise ApiError(422, "MODE_NOT_ENABLED", f"Enable '{mode}' mode in your profile first")
     excluded = await _excluded_ids(session, viewer.id)
-    candidates = (await session.scalars(select(User).where(User.id.not_in(excluded)))).all()
+    candidates = (await session.scalars(select(User).where(User.id.not_in(excluded), User.banned_at.is_(None)))).all()
     cards = [
         _card(viewer, u)
         for u in candidates
@@ -82,7 +82,7 @@ async def swipe(session: AsyncSession, viewer: User, to_user_id: uuid.UUID, dire
     if to_user_id == viewer.id:
         raise ApiError(422, "CANNOT_SWIPE_SELF", "Nice try")
     target = await session.get(User, to_user_id)
-    if target is None:
+    if target is None or target.is_banned:
         raise ApiError(404, "USER_NOT_FOUND", "User not found")
     if not rules.share_mode(viewer.profile.modes, target.profile.modes):
         raise ApiError(422, "NO_SHARED_MODE", "You do not share a mode with this person")
@@ -135,7 +135,7 @@ async def incoming_likes(session: AsyncSession, viewer: User) -> list[DiscoverCa
         await session.scalars(
             select(User)
             .join(Swipe, Swipe.from_user_id == User.id)
-            .where(Swipe.to_user_id == viewer.id, Swipe.direction == SwipeDirection.right)
+            .where(Swipe.to_user_id == viewer.id, Swipe.direction == SwipeDirection.right, User.banned_at.is_(None))
             .order_by(desc(Swipe.created_at))
         )
     ).all()

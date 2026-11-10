@@ -30,7 +30,9 @@ async def pending_feedback(session: AsyncSession, event: Event, user: User) -> P
         ).all()
     )
     pending = [
-        PublicUser.from_user(p.user) for p in event.participants if p.user_id != user.id and p.user_id not in done
+        PublicUser.from_user(p.user)
+        for p in event.participants
+        if p.user_id != user.id and p.user_id not in done and not p.user.is_banned
     ]
     return PendingFeedbackOut(pending=pending, done=sorted(done, key=str))
 
@@ -61,7 +63,8 @@ async def submit_feedback(
             PostGameFeedback.to_user_id == user.id,
         )
     )
-    if not match_after_feedback(answer, theirs):
+    target = next(p.user for p in event.participants if p.user_id == to_user_id)
+    if target.is_banned or not match_after_feedback(answer, theirs):
         await session.commit()
         return FeedbackResult(match_created=False)
 

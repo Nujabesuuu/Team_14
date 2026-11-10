@@ -37,7 +37,7 @@ erDiagram
   matches ||--|{ photo_reveals : "one per user"
   conversations ||--o{ messages : has
   users ||--o{ blocks : blocker
-  users ||--o{ reports : "🆕 reporter / reported / moderator"
+  users ||--o{ reports : "reporter / reported / moderator"
 ```
 
 ## Таблиці
@@ -55,8 +55,8 @@ erDiagram
 | `birth_date` | date | NN | | Вік рахується з неї; у відповідях лише `age` |
 | `is_premium` | bool | NN | `false` | Teamate+ без оплати |
 | `is_bot` | bool | NN | `false` | Демо-компаньйон Guide |
-| `role` 🆕 | enum `UserRole` | NN | `user` | `user` або `moderator` (US-10) |
-| `banned_at` 🆕 | timestamptz | | `null` | Заповнюється рішенням модератора; такий акаунт отримує 403 `ACCOUNT_BANNED` (US-10) |
+| `role` | enum `UserRole` | NN | `user` | `user` або `moderator` (US-10). Призначає команда (seed), через API не змінюється |
+| `banned_at` | timestamptz | | `null` | Заповнюється рішенням модератора; такий акаунт отримує 403 `ACCOUNT_BANNED` (US-10) |
 | `created_at` | timestamptz | NN | `now()` | |
 
 ### `profiles` — профіль і Ігрова ДНК ✅ (1:1 з `users`)
@@ -208,7 +208,7 @@ erDiagram
 
 Логіка симетрична: `blocked_ids(user)` повертає обидва напрями (BR-21).
 
-### `reports` — скарги й рішення модератора 🆕 (US-09, US-10)
+### `reports` — скарги й рішення модератора ✅ (US-09, US-10)
 
 | Поле | Тип | Обмеження | За замовчуванням | Опис |
 |---|---|---|---|---|
@@ -224,7 +224,11 @@ erDiagram
 | `decided_at` | timestamptz | | `null` | Коли |
 | `created_at` | timestamptz | NN | `now()` | |
 
-Перевірка: `reporter_id ≠ reported_id`.
+Обмеження `CHECK (reporter_id <> reported_id)` — `ck_report_not_self`.
+
+Частковий унікальний індекс `uq_report_open_case` на `(reporter_id, reported_id, context, context_id) WHERE status = 'new'`: одна нерозглянута скарга на пару в контексті. Сервіс перевіряє це до вставки (`ALREADY_REPORTED`), а індекс закриває гонку подвійного натискання. Розглянуті скарги можуть повторюватись.
+
+`moderator_id` має `ON DELETE SET NULL`: рішення лишається, навіть якщо акаунт модератора видалено.
 
 ## Enum-и
 
@@ -240,10 +244,10 @@ erDiagram
 | `Playstyle` | `casual`, `competitive` | ✅ |
 | `Comms` | `voice`, `text`, `both` | ✅ |
 | `AvatarKey` | `duelist`, `sage`, `impostor`, `builder`, `pilot`, `operator`, `vanguard`, `strategist` | ✅ |
-| `UserRole` | `user`, `moderator` | 🆕 |
-| `ReportContext` | `event`, `chat`, `photo` | 🆕 |
-| `ReportReason` | `harassment`, `inappropriate_photo`, `underage`, `spam`, `other` | 🆕 |
-| `ReportStatus` | `new`, `dismissed`, `warned`, `banned` | 🆕 |
+| `UserRole` | `user`, `moderator` | ✅ |
+| `ReportContext` | `event`, `chat`, `photo` | ✅ |
+| `ReportReason` | `harassment`, `inappropriate_photo`, `underage`, `spam`, `other` | ✅ |
+| `ReportStatus` | `new`, `dismissed`, `warned`, `banned` | ✅ |
 
 ## Ключові рішення по схемі
 
@@ -265,7 +269,7 @@ erDiagram
 | US-05, US-06, US-19 | `events`, `event_participants` | PK (`event_id`, `user_id`), `max_slots` |
 | US-07 | `events.started_at/finished_at/counted_at`, `game_confirmations` | PK (`event_id`, `user_id`) |
 | US-08 | `blocks` | PK (`blocker_id`, `blocked_id`) |
-| US-09, US-10 | `reports`, `users.role`, `users.banned_at` | `reporter_id ≠ reported_id` |
+| US-09, US-10 | `reports`, `users.role`, `users.banned_at` | `ck_report_not_self`, `uq_report_open_case` |
 | US-11, US-12 | `post_game_feedback`, `matches` | `uq_feedback_pair`, `uq_match_pair` |
 | US-13 | `swipes`, `matches` | `uq_swipe_pair` |
 | US-14, US-15 | `conversations`, `messages` | UQ `match_id` |

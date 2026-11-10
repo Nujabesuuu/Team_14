@@ -53,7 +53,7 @@ apps/web/src/
   pages/       екрани (один файл — один маршрут з app/App.tsx)
   features/    складові екранів за фічами
   design-system/  Phantom UI: токени і примітиви (PhantomButton, Panel, Chip, TopBar…)
-  stores/      Zustand: auth, events, matches, chat
+  stores/      Zustand: auth, events, matches, chat, reports
   api/         client.ts (fetch + JWT), types.ts, ws.ts
 docs/
   requirements.md         історії MVP і критерії приймання (Given-When-Then)
@@ -79,6 +79,7 @@ prompts/                  промпти кожної контрольної т�
 - **Async SQLAlchemy:** кожен зв'язок, який читається в обробнику, має `lazy="selectin"`, інакше `MissingGreenlet`.
 - **Публічні дані про людину — лише через `PublicUser`.** Ніколи не віддавай email, `birth_date`, `password_hash`.
 - **Час — UTC** (`utcnow()` з `models/_base.py`), ідентифікатори — UUID.
+- **Зміна моделей = стара локальна база не підходить.** Міграцій немає (ADR-0007): API перевіряє колонки на старті й зупиняється з підказкою. Після зміни схеми запусти `python dev.py --fresh` і напиши про це в описі PR.
 - **WS-події** розсилай через `hub.send_to_user(s)` після `commit`, у форматі з [contracts/api.md](docs/contracts/api.md#websocket-apiv1wstokenjwt).
 - **UI:** лише примітиви з `design-system/` і CSS-змінні з `tokens.css` (правила форм і руху — [docs/design-system.md](docs/design-system.md)); без вкладених `<button>`; поважай `prefers-reduced-motion`. Тексти інтерфейсу англійською.
 - **Тести:** на кожне бізнес-правило — тест із граничним значенням (17 років 364 дні / 18 років; 14:59 / 15:00 хв; 24 год 0 хв).

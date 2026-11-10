@@ -5,8 +5,9 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.core.db import SessionLocal
 from app.core.errors import ApiError
 from app.core.security import decode_access_token
+from app.models import User
 from app.services import chat as chat_service
-from app.ws.hub import hub
+from app.ws.hub import BANNED_CLOSE_CODE, hub
 
 router = APIRouter(tags=["realtime"])
 
@@ -16,6 +17,14 @@ async def websocket_endpoint(ws: WebSocket, token: str) -> None:
     user_id = decode_access_token(token)
     if user_id is None:
         await ws.close(code=4401)
+        return
+    async with SessionLocal() as session:
+        user = await session.get(User, user_id)
+    if user is None:
+        await ws.close(code=4401)
+        return
+    if user.is_banned:
+        await ws.close(code=BANNED_CLOSE_CODE)
         return
 
     await hub.connect(user_id, ws)

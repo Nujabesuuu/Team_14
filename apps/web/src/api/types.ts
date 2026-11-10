@@ -19,6 +19,11 @@ export type EventStatus = 'open' | 'full' | 'in_progress' | 'finished' | 'cancel
 export type FeedbackAnswer = 'again' | 'closer' | 'no'
 export type SwipeDirection = 'left' | 'right'
 export type MatchSource = 'post_game' | 'mutual_like'
+export type UserRole = 'user' | 'moderator'
+export type ReportContext = 'event' | 'chat' | 'photo'
+export type ReportReason = 'harassment' | 'inappropriate_photo' | 'underage' | 'spam' | 'other'
+export type ReportStatus = 'new' | 'dismissed' | 'warned' | 'banned'
+export type ReportDecision = Exclude<ReportStatus, 'new'>
 
 export interface Account {
   id: string
@@ -26,6 +31,8 @@ export interface Account {
   display_name: string
   age: number
   is_premium: boolean
+  /** Only decides which links the UI shows; the server checks the role on every moderation call. */
+  role: UserRole
 }
 
 export interface PublicUser {
@@ -177,6 +184,42 @@ export interface SwipeResult {
   match_created: boolean
   match_id: string | null
   rights_left: number | null
+}
+
+export interface ReportCreate {
+  reported_id: string
+  context: ReportContext
+  /** Event, conversation or match id, depending on `context`. */
+  context_id: string
+  reason: ReportReason
+  comment?: string
+}
+
+/** A report as its author sees it. There is no reporter field on purpose. */
+export interface MyReport {
+  id: string
+  reported: PublicUser
+  context: ReportContext
+  reason: ReportReason
+  status: ReportStatus
+  created_at: string
+  decided_at: string | null
+}
+
+/** A report as a moderator sees it. */
+export interface ModerationReport {
+  id: string
+  reporter: PublicUser
+  reported: PublicUser
+  context: ReportContext
+  context_id: string
+  context_label: string
+  reason: ReportReason
+  comment: string | null
+  status: ReportStatus
+  created_at: string
+  decided_at: string | null
+  moderator: PublicUser | null
 }
 
 /** Server → client WebSocket events. */

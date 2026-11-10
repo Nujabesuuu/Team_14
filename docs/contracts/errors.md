@@ -62,7 +62,7 @@ WebSocket повертає ті самі коди в повідомленні `{
 | `BAD_REQUEST`, `FORBIDDEN`, `PAYLOAD_TOO_LARGE`, `RATE_LIMITED` | 400, 403, 413, 429 | Помилки рівня фреймворку без власного коду (`_HTTP_CODES` в `core/errors.py`). Невідомий статус отримує код `HTTP_<статус>` | ✅ |
 | `INTERNAL_ERROR` | 500 | Будь-який необроблений виняток | ✅ |
 | `DB_UNAVAILABLE` | 503 | `GET /health/db` не зміг виконати запит до БД | ✅ |
-| `ACCOUNT_BANNED` | 403 | Акаунт заблоковано модератором (US-10) | 🆕 |
+| `ACCOUNT_BANNED` | 403 | Акаунт заблоковано модератором (US-10): вхід і будь-який авторизований запит. Клієнт завершує сесію | ✅ |
 
 ### Акаунт і профіль
 
@@ -112,7 +112,7 @@ WebSocket повертає ті самі коди в повідомленні `{
 | `CANNOT_SWIPE_SELF` | 422 | US-13 | ✅ |
 | `ALREADY_SWIPED` | 409 | US-13 | ✅ |
 | `SWIPE_LIMIT` | 429 | US-13: 21-й лайк за добу | ✅ |
-| `USER_NOT_FOUND` | 404 | US-13, US-09 | ✅ |
+| `USER_NOT_FOUND` | 404 | US-13: акаунта немає або його заблокував модератор | ✅ |
 | `NOTHING_TO_UNDO` | 404 | Teamate+ | ✅ |
 | `MATCH_NOT_FOUND` | 404 | US-12 | ✅ |
 | `NOT_YOUR_MATCH` | 403 | US-12, US-17 | ✅ |
@@ -124,14 +124,17 @@ WebSocket повертає ті самі коди в повідомленні `{
 |---|---|---|---|
 | `CONVERSATION_NOT_FOUND` | 404 | US-14 | ✅ |
 | `NOT_YOUR_CONVERSATION` | 403 | US-14 | ✅ |
-| `BLOCKED` | 403 | US-08, US-14 | ✅ |
+| `BLOCKED` | 403 | US-08, US-14; також розмова з акаунтом, який заблокував модератор (US-10) | ✅ |
 | `EMPTY_MESSAGE` | 422 | US-14 | ✅ |
 | `MESSAGE_TOO_LONG` | 422 | US-14: понад 2000 символів | ✅ |
 | `CANNOT_BLOCK_SELF` | 422 | US-08 | ✅ |
-| `CANNOT_REPORT_SELF` | 422 | US-09 | 🆕 |
-| `MODERATOR_ONLY` | 403 | US-10 | 🆕 |
-| `REPORT_NOT_FOUND` | 404 | US-10 | 🆕 |
-| `REPORT_ALREADY_DECIDED` | 409 | US-10 | 🆕 |
+| `CANNOT_REPORT_SELF` | 422 | US-09 | ✅ |
+| `REPORT_CONTEXT_INVALID` | 422 | US-09: скаржник і той, на кого скаржаться, не є разом учасниками цього івенту, розмови чи метчу; також коли `context_id` або акаунт не існує (не розкриваємо різницю) | ✅ |
+| `ALREADY_REPORTED` | 409 | US-09: вже є нерозглянута скарга на цю людину в цьому контексті | ✅ |
+| `MODERATOR_ONLY` | 403 | US-10 | ✅ |
+| `REPORT_CONFLICT_OF_INTEREST` | 403 | US-10: модератор є автором цієї скарги або скарга подана на нього | ✅ |
+| `REPORT_NOT_FOUND` | 404 | US-10 | ✅ |
+| `REPORT_ALREADY_DECIDED` | 409 | US-10 | ✅ |
 
 ### WebSocket
 
@@ -141,6 +144,7 @@ WebSocket повертає ті самі коди в повідомленні `{
 | `BAD_CONVERSATION_ID` | `conversation_id` не UUID | ✅ |
 | будь-який REST-код | Наприклад, `BLOCKED` при відправці в закритий чат | ✅ |
 | close `4401` | Невалідний токен при підключенні | ✅ |
+| close `4403` | Акаунт заблоковано модератором: при підключенні або в момент рішення | ✅ |
 
 ## Правила для коду
 

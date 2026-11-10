@@ -79,5 +79,9 @@ def unprocessable(code: str, detail: str) -> ApiError:
     return ApiError(422, code, detail)
 
 
+def account_banned() -> ApiError:
+    return ApiError(403, "ACCOUNT_BANNED", "This account was blocked by the Teamate team")
+
+
 def premium_required() -> ApiError:
     return ApiError(402, "PREMIUM_REQUIRED", "This feature requires Teamate+")

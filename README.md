@@ -10,6 +10,7 @@
 | КТ2. Аудиторія, ціннісна пропозиція, критичний аналіз | [5. Цільова аудиторія](#5-цільова-аудиторія) · [6. Jobs, Pains, Gains](#6-задачі-болі-вигоди-та-ціннісна-пропозиція) · [7. Критичний аналіз](#7-критичний-аналіз). Промпти в [`prompts/`](prompts/), повні відповіді ШІ в [`docs/research/`](docs/research/) |
 | КТ3. Вимоги, User Stories, MVP | **[docs/requirements.md](docs/requirements.md)**: шлях користувача, карта історій і межі MVP, User Stories, критерії приймання (Given-When-Then). Промпти 3.1–3.5 в [`prompts/`](prompts/), повні відповіді ШІ в [`docs/research/`](docs/research/) |
 | КТ4. Архітектура і каркас | [Технічний аналіз вимог](docs/technical-analysis.md) · [ADR](docs/adr/) · [Контракти: схема даних, API, помилки](docs/contracts/) · [CLAUDE.md](CLAUDE.md) · [Walking Skeleton: запуск і перевірка](#швидкий-старт). Промпти 4.1–4.4 в [`prompts/`](prompts/). Звіт і сценарій демо: [docs/kt4-report.md](docs/kt4-report.md) |
+| КТ5. Перший наскрізний сценарій | [Як перевірити перший робочий сценарій](#як-перевірити-перший-робочий-сценарій): «Скарга → рішення модератора» (US-09 + US-10) через UI, логіку і базу. Код і ШІ-рев'ю: [PR #2](https://github.com/Nujabesuuu/Team_14/pull/2). Промпти 5.1–5.3 в [`prompts/`](prompts/). Звіт і сценарій демо: [docs/kt5-report.md](docs/kt5-report.md) |
 | Робочий MVP | [`apps/`](apps/), запуск нижче |
 
 ---
@@ -67,13 +68,44 @@ npm run dev                                       # http://localhost:5173
 
 </details>
 
-Демо-акаунти: `user01@teamate.dev` … `user12@teamate.dev`, пароль `demo1234`. Чат і reveal можна перевірити самому: бот **Guide** автоматично метчиться з кожним акаунтом, відповідає й погоджується на reveal. Для повного циклу з івентом відкрийте дві вкладки (токен живе в `sessionStorage`, тому це два незалежні акаунти) і пройдіть [сценарій демо](docs/demo.md). OpenAPI: http://localhost:8000/docs.
+## Як перевірити перший робочий сценарій
+
+**Сценарій КТ5: «Скарга → рішення модератора»** ([US-09](docs/requirements.md#us-09-скарга) + [US-10](docs/requirements.md#us-10-рішення-за-скаргою)). Гравець скаржиться на людину з чату, скарга зберігається в базі й потрапляє в чергу, модератор блокує акаунт, порушника викидає із застосунку.
+
+```bash
+python dev.py --fresh        # чиста демо-база; після зміни схеми стара база не підійде
+```
+
+Потрібні дві вкладки браузера (кожна вкладка — окремий акаунт). Пароль усіх акаунтів `demo1234`.
+
+| № | Де | Що зробити | Що має статись |
+|---|---|---|---|
+| 1 | Вкладка B | Увійти як `user05@teamate.dev` (Marta) і лишити вкладку відкритою | Стрічка івентів |
+| 2 | Вкладка A | Увійти як `user02@teamate.dev` (Danylo) → **Matches** → чат з **Marta** → **Report** | Відкривається форма скарги |
+| 3 | Вкладка A | Обрати причину (наприклад, **Harassment**), написати коментар, **Send report** | Штамп **Sent** і текст, що Marta не дізнається автора. Без причини кнопка неактивна |
+| 4 | Вкладка A | **Me** → **My reports** | Скарга зі статусом **In review** |
+| 5 | Вкладка A | **Me** → **Log out**, увійти як `mod@teamate.dev` (модераторка Iryna) → **Me** → **Moderation queue** | Скарга в черзі: хто, на кого, де (чат), причина, коментар, дата |
+| 6 | Вкладка A | **Ban** → **Confirm ban** | Скарга зникає з **New** і з'являється в **Decided** з іменем модераторки |
+| 7 | Вкладка B | Нічого не натискати | Marta вже на стартовому екрані з повідомленням «This account was blocked by the Teamate team» |
+| 8 | Вкладка B | Спробувати увійти як `user05@teamate.dev` | Вхід відхилено тим самим повідомленням |
+
+**Дані справді в базі.** Зупиніть застосунок (Ctrl+C), запустіть знову `python dev.py` (вже без `--fresh`) і відкрийте чергу модератора: рішення на місці. Той самий рядок напряму з SQLite:
+
+```bash
+python -c "import sqlite3; print(*sqlite3.connect('apps/api/teamate.db').execute('select status, context, reason, comment, decided_at from reports'), sep='\n')"
+```
+
+Що ще перевірити за бажання: гравець, який відкриває `/moderation`, повертається у профіль, а API відповідає йому `403 MODERATOR_ONLY`; скарга з лобі івенту (**Events → Mine →** завершений івент → **Report** біля учасника); повторна скарга на ту саму людину в тому самому чаті дає «You already reported this person here».
+
+---
+
+Демо-акаунти: `user01@teamate.dev` … `user12@teamate.dev` і модератор `mod@teamate.dev`, пароль `demo1234`. Чат і reveal можна перевірити самому: бот **Guide** автоматично метчиться з кожним акаунтом, відповідає й погоджується на reveal. Для повного циклу з івентом відкрийте дві вкладки (токен живе в `sessionStorage`, тому це два незалежні акаунти) і пройдіть [сценарій демо](docs/demo.md). OpenAPI: http://localhost:8000/docs.
 
 **Тести:**
 
 ```bash
-cd apps/api && .venv/bin/ruff check app tests && .venv/bin/pytest -q     # 72 тести
-cd apps/web && npm run typecheck && npm run lint && npm test              # 20 тестів (+1 пропущений, поки немає портретів)
+cd apps/api && .venv/bin/ruff check app tests && .venv/bin/pytest -q     # 103 тести
+cd apps/web && npm run typecheck && npm run lint && npm test              # 30 тестів (+1 пропущений, поки немає портретів)
 ```
 
 **Android:** див. [docs/android.md](docs/android.md) (`npx cap add android && npm run cap:sync`).
@@ -83,8 +115,8 @@ cd apps/web && npm run typecheck && npm run lint && npm test              # 20 �
 ```
 apps/api/        FastAPI: app/domain (чисті правила) · services · routers · ws · seed.py · tests/
 apps/web/        React 19 + TS + Vite: design-system (Phantom UI) · avatars · pages · features · stores · api
-prompts/         промпти КТ2 (аудиторія, VPC, критичний аналіз), КТ3 (шлях, історії, MVP, критерії) і КТ4 (аналіз, ADR, контракти, каркас)
-docs/            requirements · technical-analysis · architecture · design-system · demo · android · ai-log · kt4-report
+prompts/         промпти КТ2 (аудиторія, VPC, критичний аналіз), КТ3 (шлях, історії, MVP, критерії), КТ4 (аналіз, ADR, контракти, каркас) і КТ5 (генерація коду, виправлення, ШІ-рев'ю)
+docs/            requirements · technical-analysis · architecture · design-system · demo · android · ai-log · kt4-report · kt5-report
 docs/adr/        архітектурні рішення 0001–0010 і обмеження команди
 docs/contracts/  схема даних · API · формат помилок · openapi.json
 docs/research/   повні відповіді ШІ на промпти КТ2 і КТ3
@@ -109,9 +141,10 @@ docker-compose.yml · .github/workflows/ci.yml
 | [demo.md](docs/demo.md) | Покроковий сценарій показу на двох пристроях |
 | [android.md](docs/android.md) | Збірка APK через Capacitor |
 | [ai-log.md](docs/ai-log.md) | Журнал використання ШІ: що прийнято, що відкинуто, які дефекти знайдено |
-| [prompts/](prompts/) · [research/](docs/research/) | Промпти КТ2–КТ4 (фінальна й перша версія, що змінили) і повні відповіді ШІ на промпти КТ2–КТ3 |
+| [prompts/](prompts/) · [research/](docs/research/) | Промпти КТ2–КТ5 (фінальна й перша версія, що змінили) і повні відповіді ШІ на промпти КТ2–КТ3 |
 | [adr/](docs/adr/) | Архітектурні рішення з порівнянням варіантів: репозиторій, UI, бекенд, БД, автентифікація, формат API, фото, WS-хаб |
 | [kt4-report.md](docs/kt4-report.md) | Звіт КТ4 і сценарій 3-хвилинного демо |
+| [kt5-report.md](docs/kt5-report.md) | Звіт КТ5: обраний епік, що зроблено по шарах, ШІ-рев'ю, сценарій демо |
 | [spec](docs/superpowers/specs/2026-09-18-teamate-mvp-design.md) · [plan](docs/superpowers/plans/2026-09-19-teamate-mvp.md) | Специфікація та план, за якими будувався MVP |
 
 ---
