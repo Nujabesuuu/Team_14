@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import { api, setUnauthorizedHandler, tokenStore, wsUrl } from '@/api/client'
+import { api, setAccountBannedHandler, setUnauthorizedHandler, tokenStore, wsUrl } from '@/api/client'
 import { realtime } from '@/api/ws'
 import type { Me, ProfileUpdate, TokenResponse } from '@/api/types'
 
@@ -8,6 +8,8 @@ interface AuthState {
   token: string | null
   me: Me | null
   loading: boolean
+  /** One-off message for the welcome screen, e.g. why the session just ended. */
+  notice: string | null
   bootstrap: () => Promise<void>
   register: (input: { email: string; password: string; display_name: string; birth_date: string }) => Promise<void>
   login: (email: string, password: string) => Promise<void>
@@ -18,10 +20,12 @@ interface AuthState {
   setPremium: (enabled: boolean) => Promise<void>
 }
 
+export const BANNED_NOTICE = 'This account was blocked by the Teamate team.'
+
 export const useAuth = create<AuthState>((set, get) => {
   const acceptToken = async (res: TokenResponse) => {
     tokenStore.set(res.access_token)
-    set({ token: res.access_token })
+    set({ token: res.access_token, notice: null })
     realtime.connect(wsUrl(res.access_token))
     await get().refreshMe()
   }
@@ -31,10 +35,20 @@ export const useAuth = create<AuthState>((set, get) => {
     set({ token: null, me: null })
   })
 
+  // The ban reaches an open tab either as 403 on the next request or as a socket close.
+  const endBannedSession = () => {
+    tokenStore.set(null)
+    realtime.disconnect()
+    set({ token: null, me: null, notice: BANNED_NOTICE })
+  }
+  setAccountBannedHandler(endBannedSession)
+  realtime.onBanned = endBannedSession
+
   return {
     token: tokenStore.get(),
     me: null,
     loading: true,
+    notice: null,
 
     async bootstrap() {
       const token = tokenStore.get()

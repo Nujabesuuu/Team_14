@@ -41,6 +41,12 @@ export function setUnauthorizedHandler(fn: () => void) {
   onUnauthorized = fn
 }
 
+/** A moderator banned this account: the server answers 403 ACCOUNT_BANNED to every request. */
+let onAccountBanned: (() => void) | null = null
+export function setAccountBannedHandler(fn: () => void) {
+  onAccountBanned = fn
+}
+
 async function request<T>(method: string, path: string, body?: unknown, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { ...(init?.headers as Record<string, string>) }
   const token = tokenStore.get()
@@ -65,6 +71,10 @@ async function request<T>(method: string, path: string, body?: unknown, init?: R
       onUnauthorized?.()
     }
     const code = data?.code ?? (res.status === 422 ? 'VALIDATION_ERROR' : 'HTTP_ERROR')
+    if (code === 'ACCOUNT_BANNED') {
+      tokenStore.set(null)
+      onAccountBanned?.()
+    }
     const detail =
       typeof data?.detail === 'string'
         ? data.detail

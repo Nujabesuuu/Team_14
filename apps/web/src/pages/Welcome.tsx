@@ -2,13 +2,16 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 
 import { avatarSrc, hasPortrait, MASKS } from '@/avatars'
+import { Panel } from '@/design-system/Panel'
 import { PhantomButton } from '@/design-system/PhantomButton'
+import { useAuth } from '@/stores/auth'
 
 const stagger = { hidden: { opacity: 0, x: -40 }, show: { opacity: 1, x: 0 } }
 const HERO = 'duelist' as const
 
 export function Welcome() {
   const navigate = useNavigate()
+  const notice = useAuth((s) => s.notice)
   const HeroMask = MASKS[HERO]
   return (
     <div className="screen" style={{ overflow: 'hidden' }}>
@@ -85,6 +88,14 @@ export function Welcome() {
         transition={{ staggerChildren: 0.09, delayChildren: 0.25 }}
         style={{ position: 'relative', marginTop: 'auto', padding: '0 26px calc(32px + var(--safe-bottom))' }}
       >
+        {notice && (
+          <Panel tone="paper" role="alert" style={{ marginBottom: 18 }}>
+            <div className="cond" style={{ fontSize: 12, color: 'var(--blood)' }}>
+              Session ended
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 4 }}>{notice}</div>
+          </Panel>
+        )}
         <motion.div variants={stagger} className="cond" style={{ color: 'var(--blood)', fontSize: 14 }}>
           Game first. Faces later.
         </motion.div>

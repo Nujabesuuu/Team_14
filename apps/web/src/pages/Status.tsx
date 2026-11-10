@@ -18,13 +18,15 @@ const SCREENS: { path: string; name: string; stories: string }[] = [
   { path: '/onboarding/modes', name: 'Modes & photo', stories: 'US-03, US-04' },
   { path: '/events', name: 'Tonight’s events', stories: 'US-05' },
   { path: '/events/new', name: 'Host an event', stories: 'US-19' },
-  { path: '/events/:id', name: 'Event lobby', stories: 'US-06, US-07, US-08' },
+  { path: '/events/:id', name: 'Event lobby', stories: 'US-06, US-07, US-08, US-09' },
   { path: '/events/:id/feedback', name: 'Play again?', stories: 'US-11' },
   { path: '/match/:id', name: 'It’s a match', stories: 'US-12' },
   { path: '/discover', name: 'Discover (swipes)', stories: 'US-13' },
   { path: '/matches', name: 'Matches', stories: 'US-12, US-16' },
-  { path: '/chat/:id', name: 'Chat + photo reveal', stories: 'US-14, US-15, US-16, US-17' },
+  { path: '/chat/:id', name: 'Chat + photo reveal', stories: 'US-09, US-14, US-15, US-16, US-17' },
   { path: '/me', name: 'Profile', stories: 'US-02, US-03, US-08' },
+  { path: '/reports', name: 'My reports', stories: 'US-09, US-10' },
+  { path: '/moderation', name: 'Moderation queue', stories: 'US-10' },
 ]
 
 async function probe(path: string, describe: (body: Record<string, string>) => string): Promise<Check> {

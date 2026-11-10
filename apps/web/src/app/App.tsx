@@ -20,6 +20,8 @@ import { Matches } from '@/pages/Matches'
 import { Chat } from '@/pages/Chat'
 import { Discover } from '@/pages/Discover'
 import { Likes } from '@/pages/Likes'
+import { Moderation } from '@/pages/Moderation'
+import { MyReports } from '@/pages/MyReports'
 import { Profile } from '@/pages/Profile'
 import { Status } from '@/pages/Status'
 
@@ -111,6 +113,8 @@ export function App() {
             <Route path="/match/:id" element={<MatchCelebration />} />
             <Route path="/chat/:conversationId" element={<Chat />} />
             <Route path="/likes" element={<Likes />} />
+            <Route path="/reports" element={<MyReports />} />
+            <Route path="/moderation" element={<Moderation />} />
           </Route>
 
           {/* Walking-skeleton check (KT4): public, works logged in or out. */}

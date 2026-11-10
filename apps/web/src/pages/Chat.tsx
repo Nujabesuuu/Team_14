@@ -2,11 +2,13 @@ import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { api } from '@/api/client'
+import type { ReportContext } from '@/api/types'
 import { Chip } from '@/design-system/Chip'
 import { PhantomButton } from '@/design-system/PhantomButton'
 import { MessageBubble } from '@/features/chat/MessageBubble'
 import { RevealControls } from '@/features/matches/RevealControls'
 import { RevealPhoto } from '@/features/matches/RevealPhoto'
+import { ReportSheet } from '@/features/reports/ReportSheet'
 import { useAuth } from '@/stores/auth'
 import { useChat } from '@/stores/chat'
 import { useMatches } from '@/stores/matches'
@@ -22,6 +24,7 @@ export function Chat() {
   const [draft, setDraft] = useState('')
   const [showReveal, setShowReveal] = useState(false)
   const [blocked, setBlocked] = useState(false)
+  const [reporting, setReporting] = useState<Extract<ReportContext, 'chat' | 'photo'> | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const stickToBottom = useRef(true)
 
@@ -98,9 +101,14 @@ export function Chat() {
             </Chip>
           </div>
         </div>
-        <PhantomButton size="sm" variant="ghost" onClick={block} disabled={blocked}>
-          Block
-        </PhantomButton>
+        <div style={{ display: 'grid', gap: 6 }}>
+          <PhantomButton size="sm" variant="ghost" onClick={() => setReporting('chat')}>
+            Report
+          </PhantomButton>
+          <PhantomButton size="sm" variant="ghost" onClick={block} disabled={blocked}>
+            Block
+          </PhantomButton>
+        </div>
       </header>
 
       {showReveal && (
@@ -112,6 +120,13 @@ export function Chat() {
             </div>
           </div>
           <RevealControls match={match} />
+          {other.photo_url && (
+            <div style={{ marginTop: 10 }}>
+              <Chip tone="paper" style={{ borderColor: 'var(--ash-2)', color: 'var(--ash-2)' }} onClick={() => setReporting('photo')}>
+                Report this photo
+              </Chip>
+            </div>
+          )}
         </div>
       )}
 
@@ -170,6 +185,15 @@ export function Chat() {
           Send
         </button>
       </form>
+
+      {reporting && (
+        <ReportSheet
+          target={other}
+          context={reporting}
+          contextId={reporting === 'chat' ? conversationId : match.id}
+          onClose={() => setReporting(null)}
+        />
+      )}
     </div>
   )
 }

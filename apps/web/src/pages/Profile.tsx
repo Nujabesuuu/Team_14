@@ -126,6 +126,25 @@ export function Profile() {
           </PhantomButton>
         </Panel>
 
+        <Panel tone="ink" alt>
+          <div className="cond" style={{ fontSize: 12, color: 'var(--blood)' }}>
+            Safety
+          </div>
+          <p style={{ fontSize: 13, margin: '6px 0 12px' }}>
+            Reports go to the Teamate team and are read by hand. The person you report never sees your name.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <PhantomButton size="sm" variant="paper" onClick={() => navigate('/reports')}>
+              My reports
+            </PhantomButton>
+            {me.user.role === 'moderator' && (
+              <PhantomButton size="sm" onClick={() => navigate('/moderation')}>
+                Moderation queue
+              </PhantomButton>
+            )}
+          </div>
+        </Panel>
+
         {error && <p style={{ color: 'var(--blood)', fontWeight: 600, margin: 0 }}>{error}</p>}
         <PhantomButton variant="danger" block onClick={() => { logout(); navigate('/welcome', { replace: true }) }}>
           Log out
