@@ -27,9 +27,16 @@ def test_one_open_report_per_person_and_context():
 
 
 def test_a_report_is_decided_once():
-    assert d.can_decide(S.new) is None
+    assert d.can_decide(S.new, involved=False) is None
     for decided in (S.dismissed, S.warned, S.banned):
-        assert d.can_decide(decided) == "REPORT_ALREADY_DECIDED"
+        assert d.can_decide(decided, involved=False) == "REPORT_ALREADY_DECIDED"
+
+
+def test_a_moderator_does_not_judge_their_own_case():
+    assert d.is_party(A, reporter_id=A, reported_id=B) is True
+    assert d.is_party(B, reporter_id=A, reported_id=B) is True
+    assert d.is_party(C, reporter_id=A, reported_id=B) is False
+    assert d.can_decide(S.new, involved=True) == "REPORT_CONFLICT_OF_INTEREST"
 
 
 def test_only_the_ban_decision_locks_the_account():

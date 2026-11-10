@@ -82,7 +82,7 @@ async def swipe(session: AsyncSession, viewer: User, to_user_id: uuid.UUID, dire
     if to_user_id == viewer.id:
         raise ApiError(422, "CANNOT_SWIPE_SELF", "Nice try")
     target = await session.get(User, to_user_id)
-    if target is None:
+    if target is None or target.is_banned:
         raise ApiError(404, "USER_NOT_FOUND", "User not found")
     if not rules.share_mode(viewer.profile.modes, target.profile.modes):
         raise ApiError(422, "NO_SHARED_MODE", "You do not share a mode with this person")

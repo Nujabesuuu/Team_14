@@ -1,6 +1,8 @@
+import logging
 import uuid
 
 from sqlalchemy import desc, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ApiError
@@ -9,9 +11,9 @@ from app.models import Conversation, Event, EventStatus, Match, Report, ReportCo
 from app.models._base import utcnow
 from app.schemas.report import ModerationReportOut, ReportCreate
 from app.services.events import broadcast
-from app.ws.hub import hub
+from app.ws.hub import BANNED_CLOSE_CODE, hub
 
-BANNED_CLOSE_CODE = 4403
+logger = logging.getLogger(__name__)
 
 _ERRORS = {
     "CANNOT_REPORT_SELF": (422, "You cannot report yourself"),
@@ -19,6 +21,7 @@ _ERRORS = {
     "REPORT_CONTEXT_INVALID": (422, "You can only report someone you played or matched with"),
     "ALREADY_REPORTED": (409, "You already reported this person here. The team is looking into it."),
     "REPORT_ALREADY_DECIDED": (409, "This report already has a decision"),
+    "REPORT_CONFLICT_OF_INTEREST": (403, "You are part of this report. Another moderator has to decide it."),
 }
 
 
@@ -74,7 +77,12 @@ async def create_report(session: AsyncSession, reporter: User, data: ReportCreat
         comment=(data.comment or "").strip() or None,
     )
     session.add(report)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        # A double tap passed the check above twice; the unique index let only one through.
+        await session.rollback()
+        _raise("ALREADY_REPORTED")
     await session.refresh(report)
     return report
 
@@ -129,7 +137,8 @@ async def decide(
     report = await session.get(Report, report_id)
     if report is None:
         raise ApiError(404, "REPORT_NOT_FOUND", "Report not found")
-    error = rules.can_decide(report.status)
+    involved = rules.is_party(moderator.id, reporter_id=report.reporter_id, reported_id=report.reported_id)
+    error = rules.can_decide(report.status, involved=involved)
     if error:
         _raise(error)
 
@@ -150,10 +159,18 @@ async def decide(
     await session.refresh(report)
 
     if rules.locks_account(decision):
-        await hub.close_user(report.reported_id, BANNED_CLOSE_CODE)
+        await _announce_lock_out(session, report.reported_id, changed_events)
+    return (await _moderation_out(session, [report]))[0]
+
+
+async def _announce_lock_out(session: AsyncSession, user_id: uuid.UUID, changed_events: list[Event]) -> None:
+    """Best effort: the decision is already committed, a failed push must not turn it into a 500."""
+    try:
+        await hub.close_user(user_id, BANNED_CLOSE_CODE)
         for event in changed_events:
             await broadcast(session, event)
-    return (await _moderation_out(session, [report]))[0]
+    except Exception:  # noqa: BLE001 - clients re-read the state on their next request anyway
+        logger.exception("Could not push the ban of %s to open sockets", user_id)
 
 
 async def _lock_out(session: AsyncSession, user: User) -> list[Event]:
@@ -161,7 +178,9 @@ async def _lock_out(session: AsyncSession, user: User) -> list[Event]:
 
     Finished and running events are left alone: they are the evidence behind reports.
     """
-    user.banned_at = utcnow()
+    if user.banned_at is None:
+        # A second "banned" decision keeps the moment of the first ban.
+        user.banned_at = utcnow()
     upcoming = (
         await session.scalars(
             select(Event).where(

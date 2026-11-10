@@ -30,7 +30,14 @@ def can_report(
     return None
 
 
-def can_decide(current: ReportStatus) -> str | None:
+def is_party(user_id: uuid.UUID, *, reporter_id: uuid.UUID, reported_id: uuid.UUID) -> bool:
+    return user_id in (reporter_id, reported_id)
+
+
+def can_decide(current: ReportStatus, *, involved: bool) -> str | None:
+    """`involved`: the moderator wrote this report or it is about them. Nobody judges their own case."""
+    if involved:
+        return "REPORT_CONFLICT_OF_INTEREST"
     return None if current == ReportStatus.new else "REPORT_ALREADY_DECIDED"
 
 

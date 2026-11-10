@@ -112,6 +112,27 @@ describe('report sheet (US-09)', () => {
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onClose).toHaveBeenCalled()
   })
+
+  it('takes focus when it opens, keeps Tab inside and returns focus to the opener', () => {
+    const opener = document.createElement('button')
+    document.body.append(opener)
+    opener.focus()
+    const { unmount } = render(<ReportSheet target={maks} context="chat" contextId="c1" onClose={() => {}} />)
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveFocus()
+
+    // "Send report" is disabled until a reason is picked, so Cancel is the last stop.
+    const cancel = screen.getByRole('button', { name: 'Cancel' })
+    cancel.focus()
+    fireEvent.keyDown(cancel, { key: 'Tab' })
+    expect(screen.getByRole('button', { name: 'Harassment' })).toHaveFocus()
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Harassment' }), { key: 'Tab', shiftKey: true })
+    expect(cancel).toHaveFocus()
+
+    unmount()
+    expect(opener).toHaveFocus()
+    opener.remove()
+  })
 })
 
 describe('moderation queue (US-10)', () => {
@@ -148,16 +169,30 @@ describe('moderation queue (US-10)', () => {
     expect(screen.getByText(/by Iryna/)).toBeInTheDocument()
   })
 
-  it('asks before banning and does nothing when the moderator backs out', async () => {
+  it('bans only after a second, explicit tap', async () => {
     useAuth.setState({ token: 't', me: me('moderator') })
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse(200, [queued]))
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const banned: ModerationReport = { ...queued, status: 'banned', decided_at: '2026-11-09T19:00:00Z', moderator: person('u-mod', 'Iryna') }
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async (input) =>
+        String(input).endsWith('/decision') ? jsonResponse(200, banned) : jsonResponse(200, [queued]),
+      )
+    const sentDecision = () => fetchMock.mock.calls.some(([url]) => String(url).endsWith('/decision'))
     renderQueue()
 
     fireEvent.click(await screen.findByRole('button', { name: 'Ban' }))
-    expect(window.confirm).toHaveBeenCalled()
-    expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/decision'))).toBe(false)
-    expect(screen.getByText('Chat between Dara and Max')).toBeInTheDocument()
+    expect(screen.getByText(/Ban Max\? They are logged out at once/)).toBeInTheDocument()
+    expect(sentDecision()).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep' }))
+    expect(screen.getByRole('button', { name: 'Ban' })).toBeInTheDocument()
+    expect(sentDecision()).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ban' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm ban' }))
+    expect(await screen.findByText('Queue is clear')).toBeInTheDocument()
+    const decision = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/decision'))!
+    expect(JSON.parse((decision[1] as RequestInit).body as string)).toEqual({ decision: 'banned' })
   })
 
   it('does not even ask the API when the viewer is not a moderator', () => {

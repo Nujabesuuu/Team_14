@@ -7,8 +7,7 @@ from app.core.errors import ApiError
 from app.core.security import decode_access_token
 from app.models import User
 from app.services import chat as chat_service
-from app.services.reports import BANNED_CLOSE_CODE
-from app.ws.hub import hub
+from app.ws.hub import BANNED_CLOSE_CODE, hub
 
 router = APIRouter(tags=["realtime"])
 

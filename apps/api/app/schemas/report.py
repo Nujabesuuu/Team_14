@@ -40,6 +40,11 @@ class MyReportOut(BaseModel):
         )
 
 
+def _person(user) -> PublicUser:
+    """Name, age and mask are enough to decide a report; the photo stays with the reveal rules."""
+    return PublicUser.from_user(user).model_copy(update={"photo_url": None})
+
+
 class ModerationReportOut(BaseModel):
     """The moderator's view: the only place where the reporter is named."""
 
@@ -60,8 +65,8 @@ class ModerationReportOut(BaseModel):
     def from_report(cls, report, context_label: str) -> "ModerationReportOut":
         return cls(
             id=report.id,
-            reporter=PublicUser.from_user(report.reporter),
-            reported=PublicUser.from_user(report.reported),
+            reporter=_person(report.reporter),
+            reported=_person(report.reported),
             context=report.context,
             context_id=report.context_id,
             context_label=context_label,
@@ -70,7 +75,7 @@ class ModerationReportOut(BaseModel):
             status=report.status,
             created_at=report.created_at,
             decided_at=report.decided_at,
-            moderator=PublicUser.from_user(report.moderator) if report.moderator else None,
+            moderator=_person(report.moderator) if report.moderator else None,
         )
 
 

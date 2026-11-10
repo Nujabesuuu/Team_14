@@ -7,6 +7,9 @@ from typing import Any
 
 from fastapi import WebSocket
 
+# Close code for "a moderator banned this account". 4401 is "bad token" (routers/ws.py).
+BANNED_CLOSE_CODE = 4403
+
 
 class ConnectionHub:
     def __init__(self) -> None:

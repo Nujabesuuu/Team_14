@@ -41,6 +41,8 @@ function ReportCard({
   busy: boolean
   onDecide?: (decision: ReportDecision) => void
 }) {
+  // A ban cannot be undone from the app, so it takes a second, explicit tap.
+  const [confirmingBan, setConfirmingBan] = useState(false)
   return (
     <Panel tone="ink" alt={alt}>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
@@ -63,16 +65,32 @@ function ReportCard({
         {report.context_label}
       </div>
       {report.comment ? (
-        <p style={{ margin: '6px 0 0', fontSize: 14, paddingLeft: 10, borderLeft: '3px solid var(--blood)' }}>{report.comment}</p>
+        <p style={{ margin: '6px 0 0', fontSize: 14, paddingLeft: 10, borderLeft: '3px solid var(--blood)', overflowWrap: 'anywhere' }}>
+          {report.comment}
+        </p>
       ) : (
         <p className="muted" style={{ margin: '6px 0 0', fontSize: 13 }}>
           No comment.
         </p>
       )}
 
-      {onDecide ? (
+      {onDecide && confirmingBan ? (
+        <div role="group" aria-label="Confirm ban" style={{ display: 'grid', gap: 10, marginTop: 16 }}>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>
+            Ban {report.reported.display_name}? They are logged out at once and cannot sign in again.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <PhantomButton size="sm" onClick={() => onDecide('banned')} disabled={busy}>
+              Confirm ban
+            </PhantomButton>
+            <PhantomButton size="sm" variant="ghost" onClick={() => setConfirmingBan(false)} disabled={busy}>
+              Keep
+            </PhantomButton>
+          </div>
+        </div>
+      ) : onDecide ? (
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
-          <PhantomButton size="sm" onClick={() => onDecide('banned')} disabled={busy}>
+          <PhantomButton size="sm" onClick={() => setConfirmingBan(true)} disabled={busy}>
             Ban
           </PhantomButton>
           <PhantomButton size="sm" variant="paper" onClick={() => onDecide('warned')} disabled={busy}>
@@ -111,7 +129,6 @@ export function Moderation() {
   if (role !== 'moderator') return <Navigate to="/me" replace />
 
   const onDecide = async (report: ModerationReport, decision: ReportDecision) => {
-    if (decision === 'banned' && !confirm(`Ban ${report.reported.display_name}? They are logged out and cannot sign in again.`)) return
     setBusyId(report.id)
     setError(null)
     try {

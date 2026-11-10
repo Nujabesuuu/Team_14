@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, Enum, ForeignKey, String, Uuid
+from sqlalchemy import CheckConstraint, DateTime, Enum, ForeignKey, Index, String, Uuid, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -13,7 +13,20 @@ class Report(UuidPk, Timestamped, Base):
     """A complaint in the manual moderation queue together with the moderator's decision on it."""
 
     __tablename__ = "reports"
-    __table_args__ = (CheckConstraint("reporter_id <> reported_id", name="ck_report_not_self"),)
+    __table_args__ = (
+        CheckConstraint("reporter_id <> reported_id", name="ck_report_not_self"),
+        # One undecided report per reporter, person and place; decided ones may repeat.
+        Index(
+            "uq_report_open_case",
+            "reporter_id",
+            "reported_id",
+            "context",
+            "context_id",
+            unique=True,
+            sqlite_where=text("status = 'new'"),
+            postgresql_where=text("status = 'new'"),
+        ),
+    )
 
     reporter_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     reported_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)

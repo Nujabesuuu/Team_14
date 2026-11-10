@@ -19,7 +19,8 @@ async def get_conversation_for(session: AsyncSession, conversation_id: uuid.UUID
         raise ApiError(404, "CONVERSATION_NOT_FOUND", "Conversation not found")
     if not conv.match.involves(viewer_id):
         raise ApiError(403, "NOT_YOUR_CONVERSATION", "You are not part of this conversation")
-    if await is_blocked(session, viewer_id, conv.match.other_id(viewer_id)):
+    other = conv.match.user_b if viewer_id == conv.match.user_a_id else conv.match.user_a
+    if other.is_banned or await is_blocked(session, viewer_id, other.id):
         raise ApiError(403, "BLOCKED", "This conversation is closed")
     return conv
 

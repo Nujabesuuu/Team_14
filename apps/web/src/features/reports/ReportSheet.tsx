@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useId, useState } from 'react'
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useEffect, useId, useRef, useState } from 'react'
 
 import { ApiError } from '@/api/client'
 import type { PublicUser, ReportContext, ReportReason } from '@/api/types'
@@ -37,6 +37,8 @@ export function ReportSheet({ target, context, contextId, onClose }: Props) {
   const [busy, setBusy] = useState(false)
   const [sent, setSent] = useState(false)
 
+  const dialogRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -44,6 +46,32 @@ export function ReportSheet({ target, context, contextId, onClose }: Props) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  // Modal focus: move it into the sheet on open and hand it back to the opener on close.
+  useEffect(() => {
+    const opener = document.activeElement
+    dialogRef.current?.focus()
+    return () => {
+      if (opener instanceof HTMLElement) opener.focus()
+    }
+  }, [])
+
+  /** Keeps Tab inside the sheet, so the chat behind it cannot be reached from the keyboard. */
+  const trapFocus = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Tab' || !dialogRef.current) return
+    const focusable = dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), textarea')
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (!first || !last) return
+    const active = document.activeElement
+    if (e.shiftKey && (active === first || active === dialogRef.current)) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -68,10 +96,14 @@ export function ReportSheet({ target, context, contextId, onClose }: Props) {
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
+      tabIndex={-1}
+      onKeyDown={trapFocus}
       style={{
+        outline: 'none',
         position: 'absolute',
         inset: 0,
         zIndex: 20,
