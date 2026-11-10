@@ -31,6 +31,14 @@ class ConnectionHub:
             except Exception:  # noqa: BLE001 - a dead socket must not break the request
                 self.disconnect(user_id, ws)
 
+    async def close_user(self, user_id: uuid.UUID, code: int) -> None:
+        """Drop every socket of one user, e.g. when a moderator bans the account."""
+        for ws in list(self._sockets.pop(user_id, ())):
+            try:
+                await ws.close(code=code)
+            except Exception:  # noqa: BLE001 - the socket may already be gone
+                pass
+
     async def send_to_users(self, user_ids: Iterable[uuid.UUID], payload: dict[str, Any]) -> None:
         for uid in set(user_ids):
             await self.send_to_user(uid, payload)

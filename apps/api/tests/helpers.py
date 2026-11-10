@@ -1,9 +1,10 @@
 """Shared helpers for API tests: seed games and drive the event flow through the public API."""
 
+import uuid
 from datetime import UTC, datetime, timedelta
 
 from app.core.db import SessionLocal
-from app.models import Game
+from app.models import Game, User, UserRole
 
 GAMES = {
     "valorant": ("Valorant", False),
@@ -74,3 +75,11 @@ async def match_via_feedback(client, event_id, a_h, a_id, b_h, b_id) -> str:
     r = await client.post(f"/events/{event_id}/feedback", headers=b_h, json={"to_user_id": a_id, "answer": "closer"})
     assert r.status_code == 200 and r.json()["match_created"] is True, r.text
     return r.json()["match_id"]
+
+
+async def make_moderator(user_id: str) -> None:
+    """Moderators are appointed by the team (seed), never through the API, so tests write the role directly."""
+    async with SessionLocal() as s:
+        user = await s.get(User, uuid.UUID(user_id))
+        user.role = UserRole.moderator
+        await s.commit()

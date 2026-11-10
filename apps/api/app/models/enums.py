@@ -64,3 +64,33 @@ class AvatarKey(StrEnum):
     sage = "sage"
     pilot = "pilot"
     builder = "builder"
+
+
+class UserRole(StrEnum):
+    user = "user"
+    moderator = "moderator"
+
+
+class ReportContext(StrEnum):
+    """Where it happened. `context_id` on the report is the event, conversation or match id respectively."""
+
+    event = "event"
+    chat = "chat"
+    photo = "photo"
+
+
+class ReportReason(StrEnum):
+    harassment = "harassment"
+    inappropriate_photo = "inappropriate_photo"
+    underage = "underage"
+    spam = "spam"
+    other = "other"
+
+
+class ReportStatus(StrEnum):
+    """`new` is the manual queue; the other three are the moderator's decision."""
+
+    new = "new"
+    dismissed = "dismissed"
+    warned = "warned"
+    banned = "banned"

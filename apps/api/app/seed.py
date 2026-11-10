@@ -23,11 +23,13 @@ from app.models import (
     Profile,
     ProfileGame,
     User,
+    UserRole,
 )
 from app.services.bot import GUIDE_EMAIL, ensure_guide_match
 from app.services.matches import create_match
 
 PASSWORD = "demo1234"
+MODERATOR_EMAIL = "mod@teamate.dev"
 SEED_ASSETS = Path(__file__).resolve().parent / "seed_assets"
 
 
@@ -294,6 +296,28 @@ async def seed() -> None:
             games=[ProfileGame(game_id=games[slug].id) for slug in ("valorant", "among-us", "overcooked-2")],
         )
         s.add(guide)
+
+        # A team member who works the report queue (US-10). The role is only ever set here.
+        moderator = User(
+            email=MODERATOR_EMAIL,
+            password_hash=pw,
+            display_name="Iryna",
+            birth_date=date(1998, 4, 12),
+            role=UserRole.moderator,
+        )
+        moderator.profile = Profile(
+            bio="Teamate team. I host Teamate Nights and read every report.",
+            avatar_key=AvatarKey.strategist,
+            accent_color="#F4F1EA",
+            modes=["friends"],
+            role="igl",
+            playstyle="casual",
+            comms="both",
+            schedule=["evening", "weekend"],
+            toxicity_tolerance=1,
+            games=[ProfileGame(game_id=games[slug].id) for slug in ("among-us", "overcooked-2")],
+        )
+        s.add(moderator)
         await s.flush()
 
         now = datetime.now(UTC)
@@ -374,8 +398,8 @@ async def seed() -> None:
         for u in users:
             await ensure_guide_match(s, u)
         print(
-            f"Seeded {len(USERS)} users + guide (password: {PASSWORD}), {len(GAMES)} games, "
-            f"{len(open_events) + 2} events."
+            f"Seeded {len(USERS)} users + guide + moderator {MODERATOR_EMAIL} (password: {PASSWORD}), "
+            f"{len(GAMES)} games, {len(open_events) + 2} events."
         )
 
 

@@ -3,6 +3,7 @@ from datetime import date
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.models.enums import UserRole
 from app.schemas.common import OrmModel
 
 
@@ -24,6 +25,7 @@ class AccountOut(OrmModel):
     display_name: str
     age: int
     is_premium: bool
+    role: UserRole
 
 
 class TokenOut(BaseModel):

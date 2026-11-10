@@ -13,10 +13,12 @@ def register_routers(api: APIRouter) -> None:
         games,
         matches,
         me,
+        reports,
         reveal,
         swipes,
         ws,
     )
 
-    for module in (auth, me, games, events, feedback, discover, swipes, matches, reveal, chat, blocks, ws):
+    for module in (auth, me, games, events, feedback, discover, swipes, matches, reveal, chat, blocks, reports, ws):
         api.include_router(module.router)
+    api.include_router(reports.moderation_router)

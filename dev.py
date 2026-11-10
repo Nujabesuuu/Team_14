@@ -55,9 +55,9 @@ def ensure_web_deps() -> None:
         run([npm(), "ci", "--no-audit", "--no-fund"], cwd=WEB)
 
 
-def wait_for(url: str, timeout: float = 30) -> bool:
+def wait_for(url: str, proc: subprocess.Popen, timeout: float = 30) -> bool:
     deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
+    while time.monotonic() < deadline and proc.poll() is None:
         try:
             with urllib.request.urlopen(url, timeout=2) as r:
                 if r.status == 200:
@@ -70,7 +70,9 @@ def wait_for(url: str, timeout: float = 30) -> bool:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--no-seed", action="store_true", help="skip demo data (seed is idempotent anyway)")
-    parser.add_argument("--fresh", action="store_true", help="move the local demo DB aside and reseed with today's dates")
+    parser.add_argument(
+        "--fresh", action="store_true", help="move the local demo DB aside and reseed with today's dates"
+    )
     args = parser.parse_args()
 
     if sys.version_info < (3, 12):
@@ -93,7 +95,7 @@ def main() -> None:
         subprocess.Popen([npm(), "run", "dev"], cwd=WEB),
     ]
     try:
-        if wait_for("http://localhost:8000/api/v1/health/db"):
+        if wait_for("http://localhost:8000/api/v1/health/db", procs[0]):
             print(
                 "\n  Teamate is up\n"
                 "  UI (skeleton check)  http://localhost:5173/status\n"
@@ -105,7 +107,11 @@ def main() -> None:
                 flush=True,
             )
         else:
-            print("\n  API did not answer /api/v1/health/db within 30 s, see the log above.\n", flush=True)
+            print(
+                "\n  API did not start, see the log above.\n"
+                "  If it says the database is older than the code, run: python dev.py --fresh\n",
+                flush=True,
+            )
         while all(p.poll() is None for p in procs):
             time.sleep(0.5)
     except KeyboardInterrupt:
