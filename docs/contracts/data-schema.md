@@ -224,7 +224,11 @@ erDiagram
 | `decided_at` | timestamptz | | `null` | Коли |
 | `created_at` | timestamptz | NN | `now()` | |
 
-Обмеження `CHECK (reporter_id <> reported_id)` — `ck_report_not_self`. Правило «одна нерозглянута скарга на пару в контексті» перевіряє сервіс (`ALREADY_REPORTED`).
+Обмеження `CHECK (reporter_id <> reported_id)` — `ck_report_not_self`.
+
+Частковий унікальний індекс `uq_report_open_case` на `(reporter_id, reported_id, context, context_id) WHERE status = 'new'`: одна нерозглянута скарга на пару в контексті. Сервіс перевіряє це до вставки (`ALREADY_REPORTED`), а індекс закриває гонку подвійного натискання. Розглянуті скарги можуть повторюватись.
+
+`moderator_id` має `ON DELETE SET NULL`: рішення лишається, навіть якщо акаунт модератора видалено.
 
 ## Enum-и
 
@@ -265,7 +269,7 @@ erDiagram
 | US-05, US-06, US-19 | `events`, `event_participants` | PK (`event_id`, `user_id`), `max_slots` |
 | US-07 | `events.started_at/finished_at/counted_at`, `game_confirmations` | PK (`event_id`, `user_id`) |
 | US-08 | `blocks` | PK (`blocker_id`, `blocked_id`) |
-| US-09, US-10 | `reports`, `users.role`, `users.banned_at` | `ck_report_not_self` |
+| US-09, US-10 | `reports`, `users.role`, `users.banned_at` | `ck_report_not_self`, `uq_report_open_case` |
 | US-11, US-12 | `post_game_feedback`, `matches` | `uq_feedback_pair`, `uq_match_pair` |
 | US-13 | `swipes`, `matches` | `uq_swipe_pair` |
 | US-14, US-15 | `conversations`, `messages` | UQ `match_id` |

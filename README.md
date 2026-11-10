@@ -85,7 +85,7 @@ python dev.py --fresh        # чиста демо-база; після змін
 | 3 | Вкладка A | Обрати причину (наприклад, **Harassment**), написати коментар, **Send report** | Штамп **Sent** і текст, що Marta не дізнається автора. Без причини кнопка неактивна |
 | 4 | Вкладка A | **Me** → **My reports** | Скарга зі статусом **In review** |
 | 5 | Вкладка A | **Me** → **Log out**, увійти як `mod@teamate.dev` (модераторка Iryna) → **Me** → **Moderation queue** | Скарга в черзі: хто, на кого, де (чат), причина, коментар, дата |
-| 6 | Вкладка A | **Ban** → підтвердити | Скарга зникає з **New** і з'являється в **Decided** з іменем модераторки |
+| 6 | Вкладка A | **Ban** → **Confirm ban** | Скарга зникає з **New** і з'являється в **Decided** з іменем модераторки |
 | 7 | Вкладка B | Нічого не натискати | Marta вже на стартовому екрані з повідомленням «This account was blocked by the Teamate team» |
 | 8 | Вкладка B | Спробувати увійти як `user05@teamate.dev` | Вхід відхилено тим самим повідомленням |
 
@@ -104,8 +104,8 @@ python -c "import sqlite3; print(*sqlite3.connect('apps/api/teamate.db').execute
 **Тести:**
 
 ```bash
-cd apps/api && .venv/bin/ruff check app tests && .venv/bin/pytest -q     # 94 тести
-cd apps/web && npm run typecheck && npm run lint && npm test              # 29 тестів (+1 пропущений, поки немає портретів)
+cd apps/api && .venv/bin/ruff check app tests && .venv/bin/pytest -q     # 103 тести
+cd apps/web && npm run typecheck && npm run lint && npm test              # 30 тестів (+1 пропущений, поки немає портретів)
 ```
 
 **Android:** див. [docs/android.md](docs/android.md) (`npx cap add android && npm run cap:sync`).
