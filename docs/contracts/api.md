@@ -61,10 +61,12 @@
 | Метод | Шлях | Тіло запиту | Успіх | Помилки | Статус |
 |---|---|---|---|---|---|
 | POST | `/auth/register` | `{email, password (8–128), display_name (2–40), birth_date: "YYYY-MM-DD"}` | `201 {access_token, token_type: "bearer", user: Account}`; створює порожній профіль | `409 EMAIL_TAKEN`, `422 TOO_YOUNG` (✏️ поріг 13 → 18), `422 VALIDATION_ERROR` | ✅ |
-| POST | `/auth/login` | `{email, password}` | `200 {access_token, token_type, user}` | `401 INVALID_CREDENTIALS`, 🆕 `403 ACCOUNT_BANNED` | ✅ |
+| POST | `/auth/login` | `{email, password}` | `200 {access_token, token_type, user}` | `401 INVALID_CREDENTIALS`, `403 ACCOUNT_BANNED` | ✅ |
 | GET | `/me` | — | `200 {user: Account, profile: Profile}` | `401 UNAUTHORIZED` | ✅ |
 
-`Account = {id, email, display_name, age, is_premium}` — бачить лише власник.
+`Account = {id, email, display_name, age, is_premium, role: "user" | "moderator"}` — бачить лише власник. За `role` клієнт лише показує чи ховає вхід у чергу модерації; права перевіряє сервер.
+
+Акаунт, заблокований рішенням модератора, на **будь-який** авторизований запит отримує `403 ACCOUNT_BANNED` (US-10). Клієнт у відповідь завершує сесію.
 
 ### US-02, US-18, US-03 · Ігрова ДНК, маска, «Побачення»
 
@@ -123,15 +125,41 @@
 
 | Метод | Шлях | Тіло | Успіх | Помилки | Статус |
 |---|---|---|---|---|---|
-| POST | `/reports` | `{reported_id, context: "event" \| "chat" \| "photo", context_id, reason: ReportReason, comment? (≤ 500)}` | `201 {id, status: "new", created_at}` | `422 CANNOT_REPORT_SELF`, `404 USER_NOT_FOUND`, `422 VALIDATION_ERROR` (нема причини) | 🆕 |
-| GET | `/reports/mine` | — | `200 [{id, reported: PublicUser, context, reason, status, created_at, decided_at}]` — скаржник бачить, що скаргу розглянуто | | 🆕 |
+| POST | `/reports` | `{reported_id, context: "event" \| "chat" \| "photo", context_id, reason: ReportReason, comment? (≤ 500)}`. `context_id` — id івенту, розмови або метчу відповідно | `201 MyReport` зі `status: "new"` | `422 CANNOT_REPORT_SELF`, `422 REPORT_CONTEXT_INVALID`, `409 ALREADY_REPORTED`, `422 VALIDATION_ERROR` (нема причини, коментар > 500) | ✅ |
+| GET | `/reports/mine` | — | `200 [MyReport]`, новіші зверху — скаржник бачить, що скаргу розглянуто | | ✅ |
+
+`MyReport = {id, reported: PublicUser, context, reason, status, created_at, decided_at}`. Автора скарги не містить жодна відповідь, доступна не модератору (NEVER-06).
+
+Правила подання:
+
+- Поскаржитись можна лише на людину зі спільного контексту: обоє — учасники цього івенту, або обоє — сторони цієї розмови чи метчу. Інакше `REPORT_CONTEXT_INVALID`. Той самий код повертається, коли `context_id` або `reported_id` не існує: сервер не підтверджує існування чужих івентів, розмов і акаунтів.
+- Одна нерозглянута скарга на пару «хто → на кого» в межах одного контексту. Повтор — `ALREADY_REPORTED`, щоб чергу не можна було засипати дублікатами.
+- Блокування не заважає поскаржитись: скарга після блокування — звичайний сценарій.
 
 ### US-10 · Рішення модератора
 
 | Метод | Шлях | Тіло / параметри | Успіх | Помилки | Статус |
 |---|---|---|---|---|---|
-| GET | `/moderation/reports` | `status?=new` | `200 [{id, reporter: PublicUser, reported: PublicUser, context, context_id, reason, comment, status, created_at}]` | `403 MODERATOR_ONLY` | 🆕 |
-| POST | `/moderation/reports/{id}/decision` | `{decision: "dismissed" \| "warned" \| "banned"}` | `200 Report` з `moderator_id`, `decided_at`; при `banned` заповнюється `users.banned_at` | `403 MODERATOR_ONLY`, `404 REPORT_NOT_FOUND`, `409 REPORT_ALREADY_DECIDED` | 🆕 |
+| GET | `/moderation/reports` | `status?`: `new` \| `dismissed` \| `warned` \| `banned`; без параметра — усі | `200 [ModerationReport]`, новіші зверху | `403 MODERATOR_ONLY` | ✅ |
+| POST | `/moderation/reports/{id}/decision` | `{decision: "dismissed" \| "warned" \| "banned"}` | `200 ModerationReport` з `status`, `moderator`, `decided_at` | `403 MODERATOR_ONLY`, `404 REPORT_NOT_FOUND`, `409 REPORT_ALREADY_DECIDED`, `422 VALIDATION_ERROR` | ✅ |
+
+```jsonc
+// ModerationReport — бачить лише модератор
+{ "id": "uuid", "reporter": PublicUser, "reported": PublicUser,
+  "context": "chat", "context_id": "uuid",
+  "context_label": "Chat between Nika and Danylo",   // івент: «Valorant · Yesterday's duo»; фото: «Photo of Danylo»
+  "reason": "harassment", "comment": "…" | null,
+  "status": "new", "created_at": "…",
+  "decided_at": null, "moderator": PublicUser | null }
+```
+
+Наслідки рішення `banned` (в одній транзакції з рішенням):
+
+- `users.banned_at` заповнюється; вхід і будь-який запит цього акаунта → `403 ACCOUNT_BANNED`, його WebSocket-з'єднання закриваються;
+- його івенти, що ще не почались, скасовуються (`cancelled`), а з чужих івентів, що не почались, його виписують (учасникам — WS `event.updated`);
+- він зникає з Discover і зі списку вхідних лайків.
+
+`warned` і `dismissed` лише фіксуються в скарзі: автоматичних санкцій у MVP немає (рішення №5 після КТ2 — ручна черга). Модератором стає акаунт з `users.role = moderator`; роль призначає команда (seed: `mod@teamate.dev`).
 
 ## Крок 4. Таємно обирає «ближче»
 
@@ -186,7 +214,7 @@
 
 ## WebSocket `/api/v1/ws?token=<JWT>`
 
-Одне з'єднання на вкладку; усі з'єднання користувача отримують його події. Невалідний токен → закриття з кодом `4401`. Клієнт перепідключається з експоненційною затримкою ([ADR-0004](../adr/0004-in-memory-ws-hub.md)).
+Одне з'єднання на вкладку; усі з'єднання користувача отримують його події. Невалідний токен → закриття з кодом `4401`, заблокований акаунт → `4403`. Клієнт перепідключається з експоненційною затримкою ([ADR-0004](../adr/0004-in-memory-ws-hub.md)).
 
 **Клієнт → сервер**
 
@@ -222,8 +250,8 @@
 | US-19 | `POST /events` | ✅, 🆕 `STARTS_IN_PAST` |
 | US-07 | `/start`, `/finish`, `/cancel`, `POST /events/{id}/confirm` | ✅ + 🆕 |
 | US-08 | `POST /blocks` | ✅ |
-| US-09 | `POST /reports`, `GET /reports/mine` | 🆕 |
-| US-10 | `GET /moderation/reports`, `POST /moderation/reports/{id}/decision` | 🆕 |
+| US-09 | `POST /reports`, `GET /reports/mine` | ✅ |
+| US-10 | `GET /moderation/reports`, `POST /moderation/reports/{id}/decision`, `403 ACCOUNT_BANNED` | ✅ |
 | US-11 | `GET`, `POST /events/{id}/feedback` | ✅, 🆕 24 год і «Побачення» |
 | US-12 | `POST /events/{id}/feedback` → `match.new`, `GET /matches` | ✅ |
 | US-13 | `GET /discover`, `POST /swipes` | ✅, ✏️ без фото |
