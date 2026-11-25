@@ -1,6 +1,6 @@
 from datetime import date
 
-from tests.helpers import create_event, onboard, seed_games
+from tests.helpers import create_event, onboard, seed_games, set_birth_date
 
 
 async def test_event_happy_path(client, make_user):
@@ -73,7 +73,8 @@ async def test_game_date_rules(client, make_user):
     r = await client.post(f"/events/{event['id']}/join", headers=duo_only_h)
     assert r.status_code == 403 and r.json()["code"] == "EVENT_NOT_VISIBLE"
 
-    _, minor_h = await make_user(birth_date=date(date.today().year - 16, 1, 1))
+    minor, minor_h = await make_user()
+    await set_birth_date(minor["id"], date(date.today().year - 16, 1, 1))
     r = await client.post(
         "/events",
         headers=minor_h,

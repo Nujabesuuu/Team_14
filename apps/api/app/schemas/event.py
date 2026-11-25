@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.domain.feedback import feedback_closes_at
 from app.models.enums import EventKind, EventStatus
 from app.schemas.common import PublicUser
 from app.schemas.profile import GameOut
@@ -29,6 +30,12 @@ class EventOut(BaseModel):
     is_host: bool
     is_participant: bool
     created_at: datetime
+    started_at: datetime | None
+    finished_at: datetime | None
+    counted_at: datetime | None
+    confirmations: int
+    confirmed_by_me: bool
+    feedback_closes_at: datetime | None
 
     @classmethod
     def from_event(cls, event, viewer_id: uuid.UUID) -> "EventOut":
@@ -45,4 +52,10 @@ class EventOut(BaseModel):
             is_host=event.host_id == viewer_id,
             is_participant=viewer_id in event.participant_ids,
             created_at=event.created_at,
+            started_at=event.started_at,
+            finished_at=event.finished_at,
+            counted_at=event.counted_at,
+            confirmations=len(event.confirmations),
+            confirmed_by_me=viewer_id in event.confirmed_ids,
+            feedback_closes_at=feedback_closes_at(event.counted_at) if event.counted_at else None,
         )

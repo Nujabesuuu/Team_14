@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, Enum, ForeignKey, Index, String, Uuid, text
+from sqlalchemy import CheckConstraint, Enum, ForeignKey, Index, String, Uuid, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
-from app.models._base import Timestamped, UuidPk
+from app.models._base import Timestamped, UtcDateTime, UuidPk
 from app.models.enums import ReportContext, ReportReason, ReportStatus
 
 
@@ -41,7 +41,7 @@ class Report(UuidPk, Timestamped, Base):
     moderator_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    decided_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
 
     reporter: Mapped["User"] = relationship(foreign_keys=[reporter_id], lazy="selectin")  # noqa: F821
     reported: Mapped["User"] = relationship(foreign_keys=[reported_id], lazy="selectin")  # noqa: F821

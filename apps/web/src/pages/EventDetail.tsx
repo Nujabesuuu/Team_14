@@ -9,9 +9,10 @@ import { Panel } from '@/design-system/Panel'
 import { PhantomButton } from '@/design-system/PhantomButton'
 import { TopBar } from '@/design-system/TopBar'
 import { ReportSheet } from '@/features/reports/ReportSheet'
+import { afterGame, formatLeft } from '@/lib/afterGame'
 import { formatWhen, STATUS_LABEL } from '@/lib/format'
 import { useAuth } from '@/stores/auth'
-import { useEvents } from '@/stores/events'
+import { type EventAction, useEvents } from '@/stores/events'
 
 export function EventDetail() {
   const { id = '' } = useParams()
@@ -22,6 +23,13 @@ export function EventDetail() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [reporting, setReporting] = useState<PublicUser | null>(null)
+  // Ticks the "answer within" countdown and flips to "time's up" without a reload.
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     load(id).catch(() => navigate('/events', { replace: true }))
@@ -29,12 +37,11 @@ export function EventDetail() {
 
   if (!event) return <div className="screen" />
 
-  const run = async (action: 'join' | 'leave' | 'start' | 'finish' | 'cancel') => {
+  const run = async (action: EventAction) => {
     setBusy(true)
     setError(null)
     try {
-      const updated = await act(id, action)
-      if (action === 'finish') navigate(`/events/${updated.id}/feedback`)
+      await act(id, action)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Action failed')
     } finally {
@@ -45,12 +52,65 @@ export function EventDetail() {
   const isDate = event.kind === 'game_date'
   const status = event.status
   const actions = (() => {
-    if (status === 'finished')
-      return (
-        <PhantomButton block size="lg" onClick={() => navigate(`/events/${id}/feedback`)}>
-          Play again?
-        </PhantomButton>
-      )
+    if (status === 'finished') {
+      const after = afterGame(event, now)
+      switch (after.kind) {
+        case 'confirm':
+          return (
+            <div style={{ display: 'grid', gap: 8 }}>
+              <PhantomButton block size="lg" onClick={() => run('confirm')} disabled={busy}>
+                We played — confirm
+              </PhantomButton>
+              <div className="muted" style={{ fontSize: 13, textAlign: 'center' }}>
+                The game counts when 2 players confirm it. Then you get to answer "play again?".
+              </div>
+            </div>
+          )
+        case 'waiting':
+          return (
+            <Panel tone="ink">
+              <div className="cond" style={{ color: 'var(--blood)' }}>
+                Confirmed {after.confirmations}/2
+              </div>
+              <div style={{ fontSize: 14 }}>Waiting for a teammate to confirm the game.</div>
+            </Panel>
+          )
+        case 'too_short':
+          return (
+            <Panel tone="ink">
+              <div className="cond" style={{ color: 'var(--blood)' }}>
+                Not counted
+              </div>
+              <div style={{ fontSize: 14 }}>
+                {after.minutes > 0 ? `You played ${after.minutes} min. ` : ''}A game counts from 15 minutes of play, so there is no
+                "play again?" this time.
+              </div>
+            </Panel>
+          )
+        case 'play_again':
+          return (
+            <div style={{ display: 'grid', gap: 8 }}>
+              <PhantomButton block size="lg" onClick={() => navigate(`/events/${id}/feedback`)}>
+                Play again?
+              </PhantomButton>
+              <div className="muted" style={{ fontSize: 13, textAlign: 'center' }}>
+                Answer within {formatLeft(after.leftMs)}. Nobody sees a one-sided answer.
+              </div>
+            </div>
+          )
+        case 'expired':
+          return (
+            <Panel tone="ink">
+              <div className="cond" style={{ color: 'var(--blood)' }}>
+                Time's up
+              </div>
+              <div style={{ fontSize: 14 }}>The 24 hours to answer "play again?" have passed.</div>
+            </Panel>
+          )
+        default:
+          return null
+      }
+    }
     if (status === 'cancelled') return null
     if (event.is_host) {
       return (
@@ -78,7 +138,9 @@ export function EventDetail() {
           <div className="cond" style={{ color: 'var(--blood)' }}>
             Game in progress
           </div>
-          <div style={{ fontSize: 14 }}>The host will finish the event when you're done. Then you both get to answer "play again?".</div>
+          <div style={{ fontSize: 14 }}>
+            The host finishes the event when you're done. Then you both confirm you played: games of 15+ minutes count.
+          </div>
         </Panel>
       ) : (
         <PhantomButton block variant="ghost" onClick={() => run('leave')} disabled={busy}>
@@ -100,6 +162,7 @@ export function EventDetail() {
         <Panel ghost tone="paper">
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
             <Chip tone="blood">{STATUS_LABEL[status]}</Chip>
+            {event.counted_at && <Chip tone="gold">Counted</Chip>}
             {isDate && <Chip tone="gold">2 seats</Chip>}
           </div>
           <div className="display skew" style={{ fontSize: 34, lineHeight: 0.95 }}>

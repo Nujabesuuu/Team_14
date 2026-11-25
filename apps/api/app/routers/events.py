@@ -61,3 +61,9 @@ async def finish(event_id: uuid.UUID, user: CurrentUser, session: Session) -> Ev
 async def cancel(event_id: uuid.UUID, user: CurrentUser, session: Session) -> EventOut:
     event = await service.get_event(session, event_id)
     return EventOut.from_event(await service.transition_event(session, event, user, "cancel"), user.id)
+
+
+@router.post("/{event_id}/confirm", response_model=EventOut)
+async def confirm(event_id: uuid.UUID, user: CurrentUser, session: Session) -> EventOut:
+    event = await service.get_event(session, event_id)
+    return EventOut.from_event(await service.confirm_game(session, event, user), user.id)

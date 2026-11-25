@@ -7,7 +7,15 @@ from datetime import UTC, date, datetime, timedelta
 from fastapi.testclient import TestClient
 
 from app.main import app
-from tests.helpers import create_event, make_moderator, match_via_feedback, onboard, play_together, seed_games
+from tests.helpers import (
+    create_event,
+    enable_dating,
+    finish_and_count,
+    make_moderator,
+    match_via_feedback,
+    onboard,
+    seed_games,
+)
 
 
 async def _played(client, make_user):
@@ -15,7 +23,7 @@ async def _played(client, make_user):
     games = await seed_games()
     dara, dara_h = await make_user(display_name="Dara")
     maks, maks_h = await make_user(display_name="Max")
-    event = await play_together(client, maks_h, dara_h, games["valorant"])
+    event = await finish_and_count(client, maks_h, dara_h, games["valorant"])
     return games, dara, dara_h, maks, maks_h, event
 
 
@@ -345,7 +353,7 @@ async def test_moderator_cannot_decide_a_report_they_are_part_of(client, make_us
     dara, dara_h = await make_user(display_name="Dara")
     mod, mod_h = await _moderator(make_user)
     _, other_mod_h = await _moderator(make_user)
-    event = await play_together(client, mod_h, dara_h, games["valorant"])
+    event = await finish_and_count(client, mod_h, dara_h, games["valorant"])
 
     about_mod = (await client.post("/reports", headers=dara_h, json=_report(mod, "event", event["id"]))).json()["id"]
     by_mod = (await client.post("/reports", headers=mod_h, json=_report(dara, "event", event["id"]))).json()["id"]
@@ -407,6 +415,8 @@ async def test_banned_person_is_gone_for_the_people_they_matched(client, make_us
 async def test_no_match_with_someone_banned_after_the_game(client, make_user):
     _, dara, dara_h, maks, maks_h, event = await _played(client, make_user)
     _, mod_h = await _moderator(make_user)
+    for h in (dara_h, maks_h):
+        await enable_dating(client, h)
     r = await client.post(
         f"/events/{event['id']}/feedback", headers=maks_h, json={"to_user_id": dara["id"], "answer": "closer"}
     )

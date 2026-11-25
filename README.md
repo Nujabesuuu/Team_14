@@ -11,6 +11,7 @@
 | КТ3. Вимоги, User Stories, MVP | **[docs/requirements.md](docs/requirements.md)**: шлях користувача, карта історій і межі MVP, User Stories, критерії приймання (Given-When-Then). Промпти 3.1–3.5 в [`prompts/`](prompts/), повні відповіді ШІ в [`docs/research/`](docs/research/) |
 | КТ4. Архітектура і каркас | [Технічний аналіз вимог](docs/technical-analysis.md) · [ADR](docs/adr/) · [Контракти: схема даних, API, помилки](docs/contracts/) · [CLAUDE.md](CLAUDE.md) · [Walking Skeleton: запуск і перевірка](#швидкий-старт). Промпти 4.1–4.4 в [`prompts/`](prompts/). Звіт і сценарій демо: [docs/kt4-report.md](docs/kt4-report.md) |
 | КТ5. Перший наскрізний сценарій | [Як перевірити перший робочий сценарій](#як-перевірити-перший-робочий-сценарій): «Скарга → рішення модератора» (US-09 + US-10) через UI, логіку і базу. Код і ШІ-рев'ю: [PR #2](https://github.com/Nujabesuuu/Team_14/pull/2). Промпти 5.1–5.3 в [`prompts/`](prompts/). Звіт і сценарій демо: [docs/kt5-report.md](docs/kt5-report.md) |
+| КТ6. Тестування з ШІ і наступні історії MVP | **Нове в продукті:** [US-07 підтвердження гри](docs/requirements.md#us-07-підтвердження-гри) і обмеження [US-11 «Зіграємо ще?»](docs/requirements.md#us-11-таємна-відповідь-зіграємо-ще), [як перевірити](#як-перевірити-гра--зарахування--зіграємо-ще-кт6). **Якість:** [тестова стратегія](docs/testing-strategy.md) · [звіт про тестування](docs/testing-report.md) · [запуск тестів однією командою](#тести). Промпти 6.1–6.3 в [`prompts/`](prompts/) |
 | Робочий MVP | [`apps/`](apps/), запуск нижче |
 
 ---
@@ -68,6 +69,38 @@ npm run dev                                       # http://localhost:5173
 
 </details>
 
+## Тести
+
+Усі автоматичні перевірки (як у CI) однією командою з кореня репозиторію:
+
+```bash
+python test.py            # ruff + pytest (API, 211 тестів) і tsc + oxlint + vitest (web, 47 тестів)
+python test.py --api      # лише бекенд
+python test.py --web      # лише клієнт
+```
+
+Залежності ставляться автоматично під час першого запуску, як і для `dev.py`. Демо-база не змінюється: тести працюють з SQLite у пам'яті. Що й навіщо покрито — у [тестовій стратегії](docs/testing-strategy.md), результати й знайдені баги — у [звіті](docs/testing-report.md).
+
+## Як перевірити: гра → зарахування → «Зіграємо ще?» (КТ6)
+
+[US-07](docs/requirements.md#us-07-підтвердження-гри) + [US-11](docs/requirements.md#us-11-таємна-відповідь-зіграємо-ще) + [US-12](docs/requirements.md#us-12-метч). Гра зараховується, лише якщо тривала ≥ 15 хв і її підтвердили двоє. Тільки після цього з'являється таємне «Зіграємо ще?», а на відповідь є 24 години. «Get closer» доступна, лише коли «Побачення» ввімкнено в обох.
+
+```bash
+python dev.py --fresh        # схема змінилась (started_at, counted_at, game_confirmations): стара база не підійде
+```
+
+Демо-дані вже містять гру, що триває 40 хвилин, бо 15 хвилин наживо не чекатимемо. Дві вкладки, пароль `demo1234`.
+
+| № | Де | Що зробити | Що має статись |
+|---|---|---|---|
+| 1 | Вкладка A | Увійти як `user01@teamate.dev` (Nika) → **Events → Mine → Ranked duo right now** → **We're done — finish** | Finished, кнопка **We played — confirm** |
+| 2 | Вкладка A | **We played — confirm** | «Confirmed 1/2 · Waiting for a teammate» |
+| 3 | Вкладка B | Увійти як `user08@teamate.dev` (Bohdan) → той самий івент → **We played — confirm** | В обох вкладках: чип **Counted**, кнопка **Play again?** і «Answer within 23h 59m» |
+| 4 | Обидві | **Play again? → Get closer** | Після другої відповіді — екран метчу і чат |
+| 5 | Вкладка A | **Farm build session → Play again?** | Для Olesia «Get closer» активна, для Ira (без «Побачення») — ні |
+| 6 | Вкладка A | **Quick turbo, cut short** | «Not counted · You played 10 min» |
+| 7 | Вкладка A | **Events → New**, час учорашній | «This start time has already passed» |
+
 ## Як перевірити перший робочий сценарій
 
 **Сценарій КТ5: «Скарга → рішення модератора»** ([US-09](docs/requirements.md#us-09-скарга) + [US-10](docs/requirements.md#us-10-рішення-за-скаргою)). Гравець скаржиться на людину з чату, скарга зберігається в базі й потрапляє в чергу, модератор блокує акаунт, порушника викидає із застосунку.
@@ -101,12 +134,7 @@ python -c "import sqlite3; print(*sqlite3.connect('apps/api/teamate.db').execute
 
 Демо-акаунти: `user01@teamate.dev` … `user12@teamate.dev` і модератор `mod@teamate.dev`, пароль `demo1234`. Чат і reveal можна перевірити самому: бот **Guide** автоматично метчиться з кожним акаунтом, відповідає й погоджується на reveal. Для повного циклу з івентом відкрийте дві вкладки (токен живе в `sessionStorage`, тому це два незалежні акаунти) і пройдіть [сценарій демо](docs/demo.md). OpenAPI: http://localhost:8000/docs.
 
-**Тести:**
-
-```bash
-cd apps/api && .venv/bin/ruff check app tests && .venv/bin/pytest -q     # 103 тести
-cd apps/web && npm run typecheck && npm run lint && npm test              # 30 тестів (+1 пропущений, поки немає портретів)
-```
+**Тести:** `python test.py` ([докладніше](#тести)).
 
 **Android:** див. [docs/android.md](docs/android.md) (`npx cap add android && npm run cap:sync`).
 
@@ -115,14 +143,15 @@ cd apps/web && npm run typecheck && npm run lint && npm test              # 30 �
 ```
 apps/api/        FastAPI: app/domain (чисті правила) · services · routers · ws · seed.py · tests/
 apps/web/        React 19 + TS + Vite: design-system (Phantom UI) · avatars · pages · features · stores · api
-prompts/         промпти КТ2 (аудиторія, VPC, критичний аналіз), КТ3 (шлях, історії, MVP, критерії), КТ4 (аналіз, ADR, контракти, каркас) і КТ5 (генерація коду, виправлення, ШІ-рев'ю)
-docs/            requirements · technical-analysis · architecture · design-system · demo · android · ai-log · kt4-report · kt5-report
+prompts/         промпти КТ2 (аудиторія, VPC, критичний аналіз), КТ3 (шлях, історії, MVP, критерії), КТ4 (аналіз, ADR, контракти, каркас), КТ5 (генерація коду, виправлення, ШІ-рев'ю) і КТ6 (тестова стратегія, генерація тестів, аудит)
+docs/            requirements · technical-analysis · architecture · design-system · demo · android · ai-log · kt4-report · kt5-report · testing-strategy · testing-report
 docs/adr/        архітектурні рішення 0001–0010 і обмеження команди
 docs/contracts/  схема даних · API · формат помилок · openapi.json
 docs/research/   повні відповіді ШІ на промпти КТ2 і КТ3
 docs/superpowers/  spec і план реалізації MVP
 CLAUDE.md        правила для ШІ-асистента
 dev.py           запуск усього проєкту однією командою
+test.py          усі автотести й перевірки однією командою (як у CI)
 docker-compose.yml · .github/workflows/ci.yml
 ```
 

@@ -1,6 +1,8 @@
 import uuid
 
 from sqlalchemy import desc, or_, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ApiError
@@ -20,19 +22,37 @@ async def find_match(session: AsyncSession, a: uuid.UUID, b: uuid.UUID) -> Match
 
 async def create_match(session: AsyncSession, a: uuid.UUID, b: uuid.UUID, source: MatchSource) -> Match:
     """Idempotent: returns the existing match if the pair already matched (by any path)."""
+    match, _ = await insert_match(session, a, b, source)
+    return match
+
+
+async def insert_match(session: AsyncSession, a: uuid.UUID, b: uuid.UUID, source: MatchSource) -> tuple[Match, bool]:
+    """Like create_match, and also says whether *this* call created the match (and so should announce it).
+
+    Two mutual "closer" answers can arrive at the same moment and both decide to create the match. The insert
+    skips a pair that already exists (uq_match_pair), and only the request whose row went in adds the
+    conversation and the reveal stages, so the pair never gets a 500 or a second conversation.
+    """
     existing = await find_match(session, a, b)
     if existing is not None:
-        return existing
+        return existing, False
     ua, ub = canonical_pair(a, b)
-    match = Match(user_a_id=ua, user_b_id=ub, source=source)
-    match.reveals = [
-        PhotoReveal(user_id=ua, stage=reveal_rules.stage_after_match()),
-        PhotoReveal(user_id=ub, stage=reveal_rules.stage_after_match()),
-    ]
-    match.conversation = Conversation()
-    session.add(match)
-    await session.flush()
-    return match
+    dialect = (await session.connection()).dialect.name
+    insert = pg_insert if dialect == "postgresql" else sqlite_insert
+    result = await session.execute(
+        insert(Match)
+        .values(user_a_id=ua, user_b_id=ub, source=source)
+        .on_conflict_do_nothing(index_elements=[Match.user_a_id, Match.user_b_id])
+    )
+    match = await find_match(session, a, b)
+    if result.rowcount == 1:
+        match.reveals = [
+            PhotoReveal(user_id=ua, stage=reveal_rules.stage_after_match()),
+            PhotoReveal(user_id=ub, stage=reveal_rules.stage_after_match()),
+        ]
+        match.conversation = Conversation()
+        await session.flush()
+    return match, result.rowcount == 1
 
 
 async def notify_match(session: AsyncSession, match: Match) -> None:

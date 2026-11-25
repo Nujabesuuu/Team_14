@@ -1,6 +1,6 @@
 from datetime import date
 
-from tests.helpers import onboard, seed_games
+from tests.helpers import onboard, seed_games, set_birth_date
 
 
 async def test_discover_respects_modes_and_swipes(client, make_user):
@@ -12,7 +12,8 @@ async def test_discover_respects_modes_and_swipes(client, make_user):
     await onboard(client, duo_h, modes=("duo",), games=[games["valorant"]])
     dating, dating_h = await make_user()
     await onboard(client, dating_h, modes=("dating",), games=[games["dota2"]])
-    minor, minor_h = await make_user(birth_date=date(date.today().year - 16, 1, 1))
+    minor, minor_h = await make_user()
+    await set_birth_date(minor["id"], date(date.today().year - 16, 1, 1))
     await onboard(client, minor_h, modes=("duo",), games=[games["valorant"]])
 
     r = await client.get("/discover?mode=duo", headers=me_h)

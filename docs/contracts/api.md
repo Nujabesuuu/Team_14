@@ -33,9 +33,9 @@
   "starts_at": "…", "max_slots": 2, "status": "open", "participants": [PublicUser],
   "is_host": true, "is_participant": true, "created_at": "…",
   "is_official": false,           // 🆕 Teamate Night
-  "started_at": null, "finished_at": null, "counted_at": null,   // 🆕
-  "confirmations": 0, "confirmed_by_me": false,                 // 🆕
-  "feedback_closes_at": null }                                  // 🆕 counted_at + 24 год
+  "started_at": null, "finished_at": null, "counted_at": null,   // ✅ КТ6 (US-07)
+  "confirmations": 0, "confirmed_by_me": false,                 // ✅ КТ6
+  "feedback_closes_at": null }                                  // ✅ КТ6: counted_at + 24 год
 
 // Match
 { "id": "uuid", "other": PublicUser, "source": "post_game", "conversation_id": "uuid",
@@ -60,7 +60,7 @@
 
 | Метод | Шлях | Тіло запиту | Успіх | Помилки | Статус |
 |---|---|---|---|---|---|
-| POST | `/auth/register` | `{email, password (8–128), display_name (2–40), birth_date: "YYYY-MM-DD"}` | `201 {access_token, token_type: "bearer", user: Account}`; створює порожній профіль | `409 EMAIL_TAKEN`, `422 TOO_YOUNG` (✏️ поріг 13 → 18), `422 VALIDATION_ERROR` | ✅ |
+| POST | `/auth/register` | `{email, password (8–128), display_name (2–40), birth_date: "YYYY-MM-DD"}` | `201 {access_token, token_type: "bearer", user: Account}`; створює порожній профіль | `409 EMAIL_TAKEN`, `422 TOO_YOUNG` (поріг 18, КТ6; перевіряється до пошуку email), `422 VALIDATION_ERROR` | ✅ |
 | POST | `/auth/login` | `{email, password}` | `200 {access_token, token_type, user}` | `401 INVALID_CREDENTIALS`, `403 ACCOUNT_BANNED` | ✅ |
 | GET | `/me` | — | `200 {user: Account, profile: Profile}` | `401 UNAUTHORIZED` | ✅ |
 
@@ -95,13 +95,13 @@
 
 | Метод | Шлях | Тіло запиту | Успіх | Помилки | Статус |
 |---|---|---|---|---|---|
-| POST | `/events` | `{game_id, kind?: "squad" \| "game_date", title (3–80), starts_at, max_slots? (2–10)}` | `201 Event`; хост — перший учасник | `422 UNKNOWN_GAME`, `422 GAME_DATE_REQUIRES_CHILL_GAME`, `422 GAME_DATE_REQUIRES_DATING_MODE`, 🆕 `422 STARTS_IN_PAST`, `422 VALIDATION_ERROR` | ✅ |
+| POST | `/events` | `{game_id, kind?: "squad" \| "game_date", title (3–80), starts_at, max_slots? (2–10)}` | `201 Event`; хост — перший учасник | `422 UNKNOWN_GAME`, `422 GAME_DATE_REQUIRES_CHILL_GAME`, `422 GAME_DATE_REQUIRES_DATING_MODE`, `422 STARTS_IN_PAST` (КТ6; час без поясу вважається UTC), `422 VALIDATION_ERROR` | ✅ |
 
 ### US-06 · Приєднатися
 
 | Метод | Шлях | Успіх | Помилки | Статус |
 |---|---|---|---|---|
-| POST | `/events/{id}/join` | `200 Event`; учасникам надсилається WS `event.updated` | `409 EVENT_FULL`, `409 EVENT_NOT_OPEN`, `409 ALREADY_JOINED`, `403 EVENT_NOT_VISIBLE`, `403 BLOCKED` ✏️ → `403 EVENT_NOT_VISIBLE` (заблокований не має дізнатися причину, NEVER-05), `404 EVENT_NOT_FOUND` | ✅ ✏️ |
+| POST | `/events/{id}/join` | `200 Event`; учасникам надсилається WS `event.updated` | `409 EVENT_FULL`, `409 EVENT_NOT_OPEN`, `409 ALREADY_JOINED`, `403 EVENT_NOT_VISIBLE` — і коли івент не для цієї людини, і коли між нею та хостом є блокування: заблокований не має дізнатися причину (NEVER-05, виправлено на КТ6), `404 EVENT_NOT_FOUND` | ✅ |
 | POST | `/events/{id}/leave` | `200 Event` | `409 HOST_CANNOT_LEAVE`, `409 EVENT_STARTED`, `409 NOT_PARTICIPANT` | ✅ |
 
 ## Крок 3. Грає разом
@@ -110,10 +110,10 @@
 
 | Метод | Шлях | Тіло | Успіх | Помилки | Статус |
 |---|---|---|---|---|---|
-| POST | `/events/{id}/start` | — | `200 Event`, `status = in_progress`, 🆕 `started_at` | `403 HOST_ONLY`, `409 INVALID_TRANSITION` | ✅ |
-| POST | `/events/{id}/finish` | — | `200 Event`, `status = finished`, 🆕 `finished_at`. Якщо хост не завершив, сервер вважає івент завершеним через 3 год після старту | `403 HOST_ONLY`, `409 INVALID_TRANSITION` | ✅ |
+| POST | `/events/{id}/start` | — | `200 Event`, `status = in_progress`, `started_at` | `403 HOST_ONLY`, `409 INVALID_TRANSITION` | ✅ |
+| POST | `/events/{id}/finish` | — | `200 Event`, `status = finished`, `finished_at`. Якщо хост не завершив, сервер завершує івент з `finished_at = started_at + 3 год` під час першого читання (`GET /events`, `GET /events/{id}` чи будь-яка дія з ним) і надсилає учасникам WS `event.updated` (A-09: без планувальника) | `403 HOST_ONLY`, `409 INVALID_TRANSITION` | ✅ |
 | POST | `/events/{id}/cancel` | — | `200 Event`, `status = cancelled` | `403 HOST_ONLY`, `409 INVALID_TRANSITION` | ✅ |
-| POST | `/events/{id}/confirm` | — | `200 Event` з `confirmations`, `confirmed_by_me = true`; коли ≥ 2 підтвердження і гра тривала ≥ 15 хв — `counted_at` заповнюється, учасникам WS `event.updated` | `403 NOT_PARTICIPANT`, `409 EVENT_NOT_FINISHED`, `409 ALREADY_CONFIRMED` | 🆕 |
+| POST | `/events/{id}/confirm` | — | `200 Event` з `confirmations`, `confirmed_by_me = true`; коли ≥ 2 підтвердження і гра тривала ≥ 15 хв — `counted_at` заповнюється, учасникам WS `event.updated` | `403 NOT_PARTICIPANT`, `409 EVENT_NOT_FINISHED`, `409 ALREADY_CONFIRMED` (і при подвійному натисканні). Підтвердження гри коротшої за 15 хв приймається, але гру не зараховує. Підтвердження рахуються з бази, тож два одночасні підтвердження теж зараховують гру | ✅ КТ6 |
 
 ### US-08 · Заблокувати
 
@@ -175,8 +175,8 @@
 
 | Метод | Шлях | Тіло | Успіх | Помилки | Статус |
 |---|---|---|---|---|---|
-| GET | `/events/{id}/feedback` | — | `200 {pending: [PublicUser], done: [uuid]}`; 🆕 `closer_allowed: {user_id: bool}` для кожного партнера | `403 NOT_PARTICIPANT`, `409 EVENT_NOT_FINISHED` ✏️ → `409 GAME_NOT_COUNTED` | ✅ ✏️ |
-| POST | `/events/{id}/feedback` | `{to_user_id, answer: "again" \| "closer" \| "no"}` | `200 {match_created: bool, match_id: uuid \| null}`; при взаємному `closer` — WS `match.new` обом. Одностороння відповідь нікому не надсилається | `409 ALREADY_RATED`, `422 NOT_A_TEAMMATE`, 🆕 `409 FEEDBACK_WINDOW_CLOSED`, 🆕 `422 CLOSER_REQUIRES_DATING` | ✅ ✏️ |
+| GET | `/events/{id}/feedback` | — | `200 {pending: [PublicUser], done: [uuid], closer_allowed: {user_id: bool}}`: для кожного партнера з `pending`, чи «Побачення» ввімкнено в обох. Про відповідь партнера нічого не каже. У `pending` немає забанених модератором і тих, з ким є блокування в будь-який бік (BR-21) | `403 NOT_PARTICIPANT`, `409 EVENT_NOT_FINISHED` (ще не завершено), `409 GAME_NOT_COUNTED` (завершено, але не зараховано) | ✅ КТ6 |
+| POST | `/events/{id}/feedback` | `{to_user_id, answer: "again" \| "closer" \| "no"}` | `200 {match_created: bool, match_id: uuid \| null}`; при взаємному `closer` — WS `match.new` обом. Одностороння відповідь нікому не надсилається | Ті самі, що в GET, плюс `409 FEEDBACK_WINDOW_CLOSED` (від `counted_at + 24 год 0 хв`), `422 NOT_A_TEAMMATE`, `409 ALREADY_RATED`, `422 CLOSER_REQUIRES_DATING` (за поточними налаштуваннями обох на момент відповіді). Відповідь про забаненого або про людину, з якою є блокування, не зберігається і дає звичайне `200 {match_created: false}`: окремий код видав би блокування (NEVER-05). Одночасне взаємне «ближче» дає один метч: обидва отримують `match_created: true` з тим самим `match_id`, WS `match.new` надсилається один раз | ✅ КТ6 |
 | GET | `/matches` | — | `200 [Match]` | | ✅ |
 | GET | `/matches/{id}` | — | `200 Match` | `403 NOT_YOUR_MATCH`, `404 MATCH_NOT_FOUND` | ✅ |
 
@@ -255,12 +255,12 @@
 | US-04 | `POST /me/photo`, `GET /photos/{user_id}` | ✏️ 🆕 |
 | US-05 | `GET /events`, `GET /events/{id}` | ✅, 🆕 `is_official` |
 | US-06 | `POST /events/{id}/join`, `/leave` | ✅ |
-| US-19 | `POST /events` | ✅, 🆕 `STARTS_IN_PAST` |
-| US-07 | `/start`, `/finish`, `/cancel`, `POST /events/{id}/confirm` | ✅ + 🆕 |
+| US-19 | `POST /events` | ✅, `STARTS_IN_PAST` (КТ6) |
+| US-07 | `/start`, `/finish`, `/cancel`, `POST /events/{id}/confirm` | ✅ (КТ6) |
 | US-08 | `POST /blocks` | ✅ |
 | US-09 | `POST /reports`, `GET /reports/mine` | ✅ |
 | US-10 | `GET /moderation/reports`, `POST /moderation/reports/{id}/decision`, `403 ACCOUNT_BANNED` | ✅ |
-| US-11 | `GET`, `POST /events/{id}/feedback` | ✅, 🆕 24 год і «Побачення» |
+| US-11 | `GET`, `POST /events/{id}/feedback` | ✅, 24 год і «Побачення» (КТ6) |
 | US-12 | `POST /events/{id}/feedback` → `match.new`, `GET /matches` | ✅ |
 | US-13 | `GET /discover`, `POST /swipes` | ✅, ✏️ без фото |
 | US-14 | `GET`/`POST /conversations/{id}/messages`, WS `message.send` | ✅ |

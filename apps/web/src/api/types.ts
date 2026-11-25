@@ -115,6 +115,15 @@ export interface Event {
   is_host: boolean
   is_participant: boolean
   created_at: string
+  /** US-07: set by the server on "start" and "finish" (or 3 h after the start). */
+  started_at: string | null
+  finished_at: string | null
+  /** Filled when the game lasted 15+ min and 2 participants confirmed it; "Play again?" exists only then. */
+  counted_at: string | null
+  confirmations: number
+  confirmed_by_me: boolean
+  /** counted_at + 24 h */
+  feedback_closes_at: string | null
 }
 
 export interface EventCreate {
@@ -128,6 +137,8 @@ export interface EventCreate {
 export interface PendingFeedback {
   pending: PublicUser[]
   done: string[]
+  /** Per pending teammate: "closer" needs Dating on both sides. Says nothing about their answer. */
+  closer_allowed: Record<string, boolean>
 }
 
 export interface FeedbackResult {

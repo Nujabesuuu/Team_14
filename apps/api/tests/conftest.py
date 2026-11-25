@@ -16,6 +16,10 @@ from app.main import app  # noqa: E402
 async def _fresh_schema() -> AsyncIterator[None]:
     from app import models  # noqa: F401
 
+    # A new in-memory DB and connection per test. The single StaticPool connection otherwise outlives the test's
+    # event loop, and the first test that makes two requests wait on it (concurrency tests) binds its lock to
+    # that loop: "Lock is bound to a different event loop" in a later test.
+    await engine.dispose()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)

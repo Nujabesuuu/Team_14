@@ -69,7 +69,7 @@ WebSocket повертає ті самі коди в повідомленні `{
 | Код | Статус | Історія | |
 |---|---|---|---|
 | `EMAIL_TAKEN` | 409 | US-01 | ✅ |
-| `TOO_YOUNG` | 422 | US-01: молодше 18 (зараз поріг 13, G-01) | ✅ |
+| `TOO_YOUNG` | 422 | US-01: молодше 18 (поріг піднято з 13 на КТ6, G-01) | ✅ |
 | `INVALID_CREDENTIALS` | 401 | US-01 | ✅ |
 | `UNKNOWN_GAME` | 422 | US-02, US-19 | ✅ |
 | `DATING_REQUIRES_18` | 422 | US-03 | ✅ |
@@ -94,10 +94,10 @@ WebSocket повертає ті самі коди в повідомленні `{
 | `INVALID_TRANSITION` | 409 | US-07 | ✅ |
 | `GAME_DATE_REQUIRES_CHILL_GAME` | 422 | Game Date | ✅ |
 | `GAME_DATE_REQUIRES_DATING_MODE` | 422 | Game Date | ✅ |
-| `STARTS_IN_PAST` | 422 | US-19 | 🆕 |
+| `STARTS_IN_PAST` | 422 | US-19 | ✅ |
 | `EVENT_NOT_FINISHED` | 409 | US-07, US-11 | ✅ |
-| `ALREADY_CONFIRMED` | 409 | US-07 | 🆕 |
-| `GAME_NOT_COUNTED` | 409 | US-07, US-11: гра < 15 хв або < 2 підтверджень | 🆕 |
+| `ALREADY_CONFIRMED` | 409 | US-07 | ✅ |
+| `GAME_NOT_COUNTED` | 409 | US-07, US-11: гра < 15 хв або < 2 підтверджень | ✅ |
 
 ### «Зіграємо ще?», свайпи, метчі
 
@@ -105,8 +105,8 @@ WebSocket повертає ті самі коди в повідомленні `{
 |---|---|---|---|
 | `NOT_A_TEAMMATE` | 422 | US-11 | ✅ |
 | `ALREADY_RATED` | 409 | US-11 | ✅ |
-| `FEEDBACK_WINDOW_CLOSED` | 409 | US-11: минуло 24 год | 🆕 |
-| `CLOSER_REQUIRES_DATING` | 422 | US-11, US-12: «Побачення» вимкнено хоча б в одного | 🆕 |
+| `FEEDBACK_WINDOW_CLOSED` | 409 | US-11: минуло 24 год | ✅ |
+| `CLOSER_REQUIRES_DATING` | 422 | US-11, US-12: «Побачення» вимкнено хоча б в одного | ✅ |
 | `MODE_NOT_ENABLED` | 422 | US-13 | ✅ |
 | `NO_SHARED_MODE` | 422 | US-13 | ✅ |
 | `CANNOT_SWIPE_SELF` | 422 | US-13 | ✅ |

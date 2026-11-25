@@ -16,7 +16,7 @@ from app.models.enums import (
     SwipeDirection,
     UserRole,
 )
-from app.models.event import Event, EventParticipant
+from app.models.event import Event, EventParticipant, GameConfirmation
 from app.models.feedback import PostGameFeedback
 from app.models.game import Game
 from app.models.match import Match, canonical_pair
@@ -37,6 +37,7 @@ __all__ = [
     "EventStatus",
     "FeedbackAnswer",
     "Game",
+    "GameConfirmation",
     "Match",
     "MatchSource",
     "Message",
