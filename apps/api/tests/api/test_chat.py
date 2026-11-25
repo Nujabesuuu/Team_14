@@ -1,16 +1,14 @@
-from datetime import UTC, datetime, timedelta
-
 from fastapi.testclient import TestClient
 
 from app.main import app
-from tests.helpers import match_via_feedback, play_together, seed_games
+from tests.helpers import finish_and_count, match_via_feedback, seed_games
 
 
 async def _matched(client, make_user):
     games = await seed_games()
     a, a_h = await make_user()
     b, b_h = await make_user()
-    event = await play_together(client, a_h, b_h, games["valorant"])
+    event = await finish_and_count(client, a_h, b_h, games["valorant"])
     match_id = await match_via_feedback(client, event["id"], a_h, a["id"], b_h, b["id"])
     conv_id = (await client.get(f"/matches/{match_id}", headers=a_h)).json()["conversation_id"]
     return a, a_h, b, b_h, conv_id
@@ -36,45 +34,11 @@ async def test_history_is_private_and_ordered(client, make_user):
 # --- WebSocket tests run entirely inside the sync TestClient (its own event loop/thread). ---
 
 
-def _sync_user(tc: TestClient, email: str) -> tuple[dict, dict[str, str], str]:
-    r = tc.post(
-        "/api/v1/auth/register",
-        json={"email": email, "password": "secret123", "display_name": email.split("@")[0], "birth_date": "2000-01-01"},
-    )
-    assert r.status_code == 201, r.text
-    token = r.json()["access_token"]
-    return r.json()["user"], {"Authorization": f"Bearer {token}"}, token
-
-
-def _sync_matched_conversation(tc: TestClient, game_id: str) -> tuple[str, str, str]:
-    a, a_h, token_a = _sync_user(tc, "ws-a@test.dev")
-    b, b_h, token_b = _sync_user(tc, "ws-b@test.dev")
-    r = tc.post(
-        "/api/v1/events",
-        headers=a_h,
-        json={
-            "game_id": game_id,
-            "title": "WS duo",
-            "starts_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
-            "max_slots": 2,
-        },
-    )
-    assert r.status_code == 201, r.text
-    event_id = r.json()["id"]
-    assert tc.post(f"/api/v1/events/{event_id}/join", headers=b_h).status_code == 200
-    assert tc.post(f"/api/v1/events/{event_id}/start", headers=a_h).status_code == 200
-    assert tc.post(f"/api/v1/events/{event_id}/finish", headers=a_h).status_code == 200
-    tc.post(f"/api/v1/events/{event_id}/feedback", headers=a_h, json={"to_user_id": b["id"], "answer": "closer"})
-    r = tc.post(f"/api/v1/events/{event_id}/feedback", headers=b_h, json={"to_user_id": a["id"], "answer": "closer"})
-    assert r.json()["match_created"] is True
-    conv_id = tc.get(f"/api/v1/matches/{r.json()['match_id']}", headers=a_h).json()["conversation_id"]
-    return conv_id, token_a, token_b
-
-
-async def test_websocket_delivers_to_both_sides():
-    games = await seed_games()
+async def test_websocket_delivers_to_both_sides(client, make_user):
+    # The match is set up through the async client: a counted game needs its start time moved in the DB (US-07).
+    _, a_h, _, b_h, conv_id = await _matched(client, make_user)
+    token_a, token_b = (h["Authorization"].removeprefix("Bearer ") for h in (a_h, b_h))
     with TestClient(app) as tc:
-        conv_id, token_a, token_b = _sync_matched_conversation(tc, str(games["valorant"].id))
         with (
             tc.websocket_connect(f"/api/v1/ws?token={token_a}") as ws_a,
             tc.websocket_connect(f"/api/v1/ws?token={token_b}") as ws_b,

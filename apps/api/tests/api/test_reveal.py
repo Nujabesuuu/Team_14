@@ -1,11 +1,11 @@
-from tests.helpers import match_via_feedback, play_together, seed_games
+from tests.helpers import finish_and_count, match_via_feedback, seed_games
 
 
 async def _matched_pair(client, make_user):
     games = await seed_games()
     a, a_h = await make_user()
     b, b_h = await make_user()
-    event = await play_together(client, a_h, b_h, games["valorant"])
+    event = await finish_and_count(client, a_h, b_h, games["valorant"])
     match_id = await match_via_feedback(client, event["id"], a_h, a["id"], b_h, b["id"])
     return games, a, a_h, b, b_h, match_id
 
@@ -27,7 +27,7 @@ async def test_consent_needs_both(client, make_user):
 
 async def test_playing_again_after_match_unlocks_stage_two(client, make_user):
     games, a, a_h, b, b_h, match_id = await _matched_pair(client, make_user)
-    await play_together(client, b_h, a_h, games["valorant"])
+    await finish_and_count(client, b_h, a_h, games["valorant"])
     r = await client.get(f"/matches/{match_id}", headers=a_h)
     assert r.json()["reveal"]["my_stage"] == 2 and r.json()["reveal"]["their_stage"] == 2
 

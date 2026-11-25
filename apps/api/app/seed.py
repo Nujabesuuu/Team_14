@@ -18,6 +18,7 @@ from app.models import (
     EventParticipant,
     EventStatus,
     Game,
+    GameConfirmation,
     MatchSource,
     Message,
     Profile,
@@ -341,32 +342,40 @@ async def seed() -> None:
             e.participants.append(EventParticipant(user_id=users[host_idx].id))
             s.add(e)
 
-        # Two finished events: one already led to a match with messages.
-        finished = Event(
-            host_id=users[1].id,
-            game_id=games["valorant"].id,
-            title="Yesterday's duo",
-            starts_at=now - timedelta(days=1),
-            max_slots=2,
-            status=EventStatus.finished,
-        )
-        finished.participants = [EventParticipant(user_id=users[1].id), EventParticipant(user_id=users[4].id)]
-        s.add(finished)
+        # US-07 demo: one game is live (started 40 min ago, so it counts once both confirm), one counted game still has
+        # "Play again?" open, one was too short to count, and yesterday's game is past its 24 hours and led to a match.
+        def played(host, others, slug, title, started_ago, minutes, *, counted=True, status=EventStatus.finished):
+            started = now - started_ago
+            e = Event(
+                host_id=host.id,
+                game_id=games[slug].id,
+                title=title,
+                starts_at=started,
+                max_slots=1 + len(others),
+                status=status,
+                started_at=started,
+            )
+            e.participants = [EventParticipant(user_id=u.id) for u in (host, *others)]
+            if status == EventStatus.finished:
+                e.finished_at = started + timedelta(minutes=minutes)
+            if counted:
+                e.confirmations = [GameConfirmation(user_id=u.id) for u in (host, *others)]
+                e.counted_at = e.finished_at + timedelta(minutes=1)
+            s.add(e)
 
-        played = Event(
-            host_id=users[2].id,
-            game_id=games["minecraft"].id,
-            title="Farm build session",
-            starts_at=now - timedelta(days=2),
-            max_slots=3,
-            status=EventStatus.finished,
+        played(
+            users[0],
+            [users[7]],
+            "valorant",
+            "Ranked duo right now",
+            timedelta(minutes=40),
+            0,
+            counted=False,
+            status=EventStatus.in_progress,
         )
-        played.participants = [
-            EventParticipant(user_id=users[2].id),
-            EventParticipant(user_id=users[8].id),
-            EventParticipant(user_id=users[0].id),
-        ]
-        s.add(played)
+        played(users[2], [users[8], users[0]], "minecraft", "Farm build session", timedelta(hours=3), 45)
+        played(users[3], [users[0]], "dota2", "Quick turbo, cut short", timedelta(hours=1), 10, counted=False)
+        played(users[1], [users[4]], "valorant", "Yesterday's duo", timedelta(hours=27), 40)
         await s.flush()
 
         m1 = await create_match(s, users[1].id, users[4].id, MatchSource.post_game)
@@ -399,7 +408,7 @@ async def seed() -> None:
             await ensure_guide_match(s, u)
         print(
             f"Seeded {len(USERS)} users + guide + moderator {MODERATOR_EMAIL} (password: {PASSWORD}), "
-            f"{len(GAMES)} games, {len(open_events) + 2} events."
+            f"{len(GAMES)} games, {len(open_events) + 4} events."
         )
 
 

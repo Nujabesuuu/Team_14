@@ -4,6 +4,8 @@ import { api } from '@/api/client'
 import { realtime } from '@/api/ws'
 import type { Event, EventCreate, EventKind, Game } from '@/api/types'
 
+export type EventAction = 'join' | 'leave' | 'start' | 'finish' | 'cancel' | 'confirm'
+
 interface EventsState {
   games: Game[]
   feed: Event[]
@@ -15,7 +17,7 @@ interface EventsState {
   loadMine: () => Promise<void>
   load: (id: string) => Promise<Event>
   create: (input: EventCreate) => Promise<Event>
-  act: (id: string, action: 'join' | 'leave' | 'start' | 'finish' | 'cancel') => Promise<Event>
+  act: (id: string, action: EventAction) => Promise<Event>
   upsert: (event: Event) => void
 }
 

@@ -1,4 +1,4 @@
-from tests.helpers import create_event, match_via_feedback, play_together, seed_games
+from tests.helpers import create_event, finish_and_count, match_via_feedback, seed_games
 
 
 async def test_feedback_needs_finished_event(client, make_user):
@@ -19,7 +19,7 @@ async def test_outsider_cannot_rate(client, make_user):
     host, host_h = await make_user()
     guest, guest_h = await make_user()
     _, outsider_h = await make_user()
-    event = await play_together(client, host_h, guest_h, games["valorant"])
+    event = await finish_and_count(client, host_h, guest_h, games["valorant"])
     r = await client.get(f"/events/{event['id']}/feedback", headers=outsider_h)
     assert r.status_code == 403 and r.json()["code"] == "NOT_PARTICIPANT"
 
@@ -28,7 +28,7 @@ async def test_mutual_closer_creates_one_match(client, make_user):
     games = await seed_games()
     host, host_h = await make_user()
     guest, guest_h = await make_user()
-    event = await play_together(client, host_h, guest_h, games["valorant"])
+    event = await finish_and_count(client, host_h, guest_h, games["valorant"])
 
     pending = await client.get(f"/events/{event['id']}/feedback", headers=host_h)
     assert [p["id"] for p in pending.json()["pending"]] == [guest["id"]]
@@ -52,7 +52,7 @@ async def test_closer_plus_again_is_not_a_match(client, make_user):
     games = await seed_games()
     host, host_h = await make_user()
     guest, guest_h = await make_user()
-    event = await play_together(client, host_h, guest_h, games["valorant"])
+    event = await finish_and_count(client, host_h, guest_h, games["valorant"])
     await client.post(
         f"/events/{event['id']}/feedback", headers=host_h, json={"to_user_id": guest["id"], "answer": "closer"}
     )
@@ -68,7 +68,7 @@ async def test_match_detail_is_private(client, make_user):
     host, host_h = await make_user()
     guest, guest_h = await make_user()
     _, outsider_h = await make_user()
-    event = await play_together(client, host_h, guest_h, games["valorant"])
+    event = await finish_and_count(client, host_h, guest_h, games["valorant"])
     match_id = await match_via_feedback(client, event["id"], host_h, host["id"], guest_h, guest["id"])
     r = await client.get(f"/matches/{match_id}", headers=outsider_h)
     assert r.status_code == 403 and r.json()["code"] == "NOT_YOUR_MATCH"

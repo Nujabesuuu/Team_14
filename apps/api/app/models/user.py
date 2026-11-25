@@ -1,10 +1,11 @@
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, String
+from sqlalchemy import Boolean, Date, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
-from app.models._base import Timestamped, UuidPk
+from app.domain.accounts import age_on
+from app.models._base import Timestamped, UtcDateTime, UuidPk, utcnow
 from app.models.enums import UserRole
 
 
@@ -21,21 +22,18 @@ class User(UuidPk, Timestamped, Base):
     # Moderators are appointed by the team (seed); no endpoint changes the role.
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.user, nullable=False)
     # Set by a moderator's "banned" decision; a banned account is refused on login and on every request.
-    banned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    banned_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
 
     profile: Mapped["Profile"] = relationship(  # noqa: F821
         back_populates="user", uselist=False, cascade="all, delete-orphan", lazy="selectin"
     )
 
     def age_on(self, today: date) -> int:
-        years = today.year - self.birth_date.year
-        if (today.month, today.day) < (self.birth_date.month, self.birth_date.day):
-            years -= 1
-        return years
+        return age_on(self.birth_date, today)
 
     @property
     def age(self) -> int:
-        return self.age_on(date.today())
+        return self.age_on(utcnow().date())
 
     @property
     def is_moderator(self) -> bool:

@@ -2,16 +2,21 @@
 
 State machine:
     open --(slots filled)--> full
-    open/full --(host: start)--> in_progress --(host: finish)--> finished
+    open/full --(host: start)--> in_progress --(host: finish, or 3 h after start)--> finished
     open/full --(host: cancel)--> cancelled
+A finished event is "counted" (US-07) when it lasted >= 15 min and two participants confirmed it.
 """
 
+from datetime import datetime, timedelta
 from typing import Literal
 
 from app.models.enums import EventKind, EventStatus, Mode
 
 Action = Literal["start", "finish", "cancel"]
 ADULT_AGE = 18
+MIN_PLAY = timedelta(minutes=15)
+AUTO_FINISH_AFTER = timedelta(hours=3)
+MIN_CONFIRMATIONS = 2
 
 
 def next_status_after_join(participants: int, max_slots: int) -> EventStatus:
@@ -74,3 +79,17 @@ def validate_new_event(kind: EventKind, game_is_chill: bool, host_modes: list[st
 
 def slots_for(kind: EventKind, requested: int) -> int:
     return 2 if kind == EventKind.game_date else max(2, min(requested, 10))
+
+
+def starts_in_past(starts_at: datetime, now: datetime) -> bool:
+    return starts_at < now
+
+
+def auto_finish_due(status: EventStatus, started_at: datetime | None, now: datetime) -> bool:
+    """BR-10: a host who forgot to press "finish" does not keep the game open forever."""
+    return status == EventStatus.in_progress and started_at is not None and now - started_at >= AUTO_FINISH_AFTER
+
+
+def game_counts(started_at: datetime, finished_at: datetime, confirmations: int) -> bool:
+    """BR-11: 14:59 of play is not a game, even if everyone confirms; one confirmation is never enough."""
+    return finished_at - started_at >= MIN_PLAY and confirmations >= MIN_CONFIRMATIONS

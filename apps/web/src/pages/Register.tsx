@@ -65,7 +65,7 @@ export function Register() {
           value={form.birth_date}
           onChange={(e) => setForm({ ...form, birth_date: e.target.value })}
           required
-          hint="Dating mode unlocks at 18. Nobody else sees this."
+          hint="Teamate is for adults 18+. Nobody else sees your birth date."
           error={error}
         />
         <PhantomButton size="lg" block type="submit" disabled={busy}>

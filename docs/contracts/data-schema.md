@@ -28,8 +28,8 @@ erDiagram
   games ||--o{ events : ""
   events ||--o{ event_participants : has
   users ||--o{ event_participants : joins
-  events ||--o{ game_confirmations : "🆕 confirmed by"
-  users ||--o{ game_confirmations : "🆕"
+  events ||--o{ game_confirmations : "confirmed by"
+  users ||--o{ game_confirmations : "confirms"
   events ||--o{ post_game_feedback : collects
   users ||--o{ swipes : from
   users ||--o{ matches : "user_a / user_b"
@@ -106,13 +106,13 @@ erDiagram
 | `game_id` | uuid | NN, FK → `games.id` | | |
 | `kind` | enum `EventKind` | NN | `squad` | `game_date` — завжди 2 місця |
 | `title` | varchar(80) | NN | | 3–80 символів |
-| `starts_at` | timestamptz | NN | | 🆕 не в минулому на момент створення (G-07) |
+| `starts_at` | timestamptz | NN | | Не в минулому на момент створення (G-07, КТ6) |
 | `max_slots` | int | NN | `2` | 2–10 |
 | `status` | enum `EventStatus` | NN | `open` | Машина станів у [technical-analysis.md](../technical-analysis.md#22-івент) |
 | `is_official` 🆕 | bool | NN | `false` | Teamate Night; ставить лише модератор/seed (US-05) |
-| `started_at` 🆕 | timestamptz | | `null` | Момент «Старт» |
-| `finished_at` 🆕 | timestamptz | | `null` | «Завершити» або `started_at + 3 год` |
-| `counted_at` 🆕 | timestamptz | | `null` | Гру зараховано (≥ 15 хв і ≥ 2 підтвердження). Від нього відлік 24 год (BR-12) |
+| `started_at` | timestamptz | | `null` | Момент «Старт» (КТ6) |
+| `finished_at` | timestamptz | | `null` | «Завершити» або `started_at + 3 год` (КТ6) |
+| `counted_at` | timestamptz | | `null` | Гру зараховано (≥ 15 хв і ≥ 2 підтвердження). Від нього відлік 24 год (BR-12) (КТ6) |
 | `created_at` | timestamptz | NN | `now()` | |
 
 Індекс 🆕: `IX(status, starts_at)` для стрічки «на сьогодні».
@@ -125,7 +125,7 @@ erDiagram
 | `user_id` | uuid | PK, FK → `users.id` CASCADE | Складений PK забороняє приєднатися двічі (BR-08) |
 | `joined_at` | timestamptz | NN | |
 
-### `game_confirmations` — підтвердження гри 🆕 (US-07)
+### `game_confirmations` — підтвердження гри ✅ (US-07, КТ6)
 
 | Поле | Тип | Обмеження | Опис |
 |---|---|---|---|
@@ -142,7 +142,7 @@ erDiagram
 | `from_user_id` | uuid | NN, FK → `users.id` CASCADE | |
 | `to_user_id` | uuid | NN, FK → `users.id` CASCADE | |
 | `answer` | enum `FeedbackAnswer` | NN | `again`, `closer`, `no` |
-| `created_at` | timestamptz | NN | Має бути < `events.counted_at + 24 год` 🆕 |
+| `created_at` | timestamptz | NN | Має бути < `events.counted_at + 24 год` (перевіряє сервіс, КТ6) |
 
 `UQ(event_id, from_user_id, to_user_id)` — `uq_feedback_pair`: одна відповідь на пару в межах івенту.
 

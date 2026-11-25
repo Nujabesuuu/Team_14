@@ -759,6 +759,54 @@
         }
       }
     },
+    "/api/v1/events/{event_id}/confirm": {
+      "post": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Confirm",
+        "operationId": "confirm_api_v1_events__event_id__confirm_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/events/{event_id}/feedback": {
       "get": {
         "tags": [
@@ -1910,6 +1958,62 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "counted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counted At"
+          },
+          "confirmations": {
+            "type": "integer",
+            "title": "Confirmations"
+          },
+          "confirmed_by_me": {
+            "type": "boolean",
+            "title": "Confirmed By Me"
+          },
+          "feedback_closes_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback Closes At"
           }
         },
         "type": "object",
@@ -1925,7 +2029,13 @@
           "participants",
           "is_host",
           "is_participant",
-          "created_at"
+          "created_at",
+          "started_at",
+          "finished_at",
+          "counted_at",
+          "confirmations",
+          "confirmed_by_me",
+          "feedback_closes_at"
         ],
         "title": "EventOut"
       },
@@ -2350,12 +2460,23 @@
             },
             "type": "array",
             "title": "Done"
+          },
+          "closer_allowed": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "propertyNames": {
+              "format": "uuid"
+            },
+            "type": "object",
+            "title": "Closer Allowed"
           }
         },
         "type": "object",
         "required": [
           "pending",
-          "done"
+          "done",
+          "closer_allowed"
         ],
         "title": "PendingFeedbackOut"
       },

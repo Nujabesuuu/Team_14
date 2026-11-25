@@ -1,7 +1,7 @@
 import io
 from datetime import date
 
-from tests.helpers import seed_games
+from tests.helpers import seed_games, set_birth_date
 
 
 async def test_update_dna_and_games(client, make_user):
@@ -30,7 +30,8 @@ async def test_update_dna_and_games(client, make_user):
 
 
 async def test_dating_mode_requires_18(client, make_user):
-    _, h = await make_user(birth_date=date(date.today().year - 17, 1, 1))
+    user, h = await make_user()
+    await set_birth_date(user["id"], date(date.today().year - 17, 1, 1))
     r = await client.put("/me", headers=h, json={"modes": ["dating"]})
     assert r.status_code == 422 and r.json()["code"] == "DATING_REQUIRES_18"
 

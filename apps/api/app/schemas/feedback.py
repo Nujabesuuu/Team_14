@@ -19,3 +19,5 @@ class FeedbackResult(BaseModel):
 class PendingFeedbackOut(BaseModel):
     pending: list[PublicUser]
     done: list[uuid.UUID]
+    # Per pending teammate: may I answer "closer"? Says nothing about their answer, only about both dating settings.
+    closer_allowed: dict[uuid.UUID, bool]
